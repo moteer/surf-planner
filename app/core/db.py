@@ -1,18 +1,23 @@
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, declarative_base
+from app.core.config import DATABASE_URL
 
-# Define the database connection (update with your MySQL credentials)
-DATABASE_URL = "mysql+pymysql://admin:admin@localhost/surf_conditions"
+# Extra options for SQLite in-memory mode
+connect_args = {"check_same_thread": False} if "sqlite" in DATABASE_URL else {}
 
-# Create engine and session
-engine = create_engine(DATABASE_URL, echo=True)
-SessionLocal = sessionmaker(bind=engine)
+# Create the database engine
+engine = create_engine(DATABASE_URL, connect_args=connect_args)
+
+# Create session factory
+SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
+
+# Base class for SQLAlchemy models
 Base = declarative_base()
 
-def get_database_session():
-    database = SessionLocal()
+# Dependency to get a database session
+def get_db():
+    db = SessionLocal()
     try:
-        yield database  # Pass the session to the dependency
+        yield db
     finally:
-        database.close()  # Ensure the session is properly closed
+        db.close()
