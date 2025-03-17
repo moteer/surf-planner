@@ -10,11 +10,9 @@ engine = create_engine(DATABASE_URL, echo=True)
 SessionLocal = sessionmaker(bind=engine)
 Base = declarative_base()
 
-def get_db():
+def get_database_session():
     database = SessionLocal()
     try:
         yield database  # Pass the session to the dependency
     finally:
         database.close()  # Ensure the session is properly closed
-
-print(get_db())
