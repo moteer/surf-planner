@@ -17,3 +17,4 @@ def get_db():
     finally:
         database.close()  # Ensure the session is properly closed
 
+print(get_db())

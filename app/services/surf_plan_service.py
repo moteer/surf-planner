@@ -14,8 +14,8 @@ class SurfPlanService:
     def generate_surf_plan_for_day_and_location(self, date: datetime, location_id: int):
         # check if surfplan exits already and dicide to keep or throw error
 
-        guests = guest_repoitory.get_guests_by_day(date)
+        #guests = guest_repoitory.get_guests_by_day(date)
 
         surf_plan = generateFancyurfPlanLogicThaMakesEverythinAwesome(guests)
 
-        surf_plan_repostory.save(surf_plan)
+        #surf_plan_repostory.save(surf_plan)
