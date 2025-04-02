@@ -11,8 +11,6 @@ engine = create_engine(DATABASE_URL, connect_args=connect_args)
 # Create session factory
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 
-# Base class for SQLAlchemy models
-Base = declarative_base()
 
 # Dependency to get a database session
 def get_db():
