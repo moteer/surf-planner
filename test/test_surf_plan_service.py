@@ -3,7 +3,16 @@ from unittest.mock import Mock
 from datetime import date, datetime
 
 from app.domain.models import SurfPlan, Slot, Group, Student, Instructor
+from app.domain.repositories_interfaces import SurfPlanRepositoryInterface
 from app.services.surf_plan_service import SurfPlanService
+
+
+class TestSurfPlanRepositoryImplForSurfPlanExitsAlready(SurfPlanRepositoryInterface):
+    def save(self, surf_plan: SurfPlan) -> SurfPlan:
+        print("test save")
+
+    def get_by_date_and_location(self, plan_date: date, location_id: int) -> SurfPlan:
+        return SurfPlan(date(2,2,3), [Slot], 1)
 
 
 class TestSurfPlanService(unittest.TestCase):
@@ -71,11 +80,12 @@ class TestSurfPlanService(unittest.TestCase):
               ]
     test_surf_plan = SurfPlan(test_surf_plan_date, [Slot(slot_date_time, groups)])
 
+
     ## make service call student mock it should return all students that are on camp for the given date
     ## the service should generate the correct groups depending on the level of the students and save them into the surf plan
-    def test_generate_surf_plan_when_no_existing_surf_plan(self):
+    def test_generate_surf_plan_when_no_surf_plan_exists(self):
         # Create mock repository
-        mock_repository = Mock()
+        mock_repository : SurfPlanRepositoryInterface = Mock()
         mock_repository.get_by_date_and_location.return_value = None
 
         # When save is called, return the plan with an ID

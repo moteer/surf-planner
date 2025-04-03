@@ -5,7 +5,7 @@ from typing import Optional, List
 from app.domain.models import SurfPlan, Student, Instructor, Group, Slot
 
 
-class SurfPlanRepository(ABC):
+class SurfPlanRepositoryInterface(ABC):
     @abstractmethod
     def get_by_date_and_location(self, plan_date: date, location_id: int) -> SurfPlan:
         pass

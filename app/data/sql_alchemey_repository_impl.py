@@ -1,13 +1,13 @@
 from datetime import date
 from typing import List, Optional
 from sqlalchemy.orm import Session
-from app.domain.repositories import SurfPlanRepository, StudentRepository, InstructorRepository, GroupRepository, \
+from app.domain.repositories_interfaces import SurfPlanRepositoryInterface, StudentRepository, InstructorRepository, GroupRepository, \
     SlotRepository
 from app.domain.models import SurfPlan, Student, Instructor, Group, Slot
 from app.data.orm_models import SurfPlanORM, StudentORM, InstructorORM, GroupORM, SlotORM
 
 
-class SQLAlchemySurfPlanRepository(SurfPlanRepository):
+class SQLAlchemySurfPlanRepositoryImpl(SurfPlanRepositoryInterface):
     def __init__(self, session: Session):
         self.session = session
 

@@ -1,10 +1,10 @@
 from datetime import date
-from app.domain.repositories import SurfPlanRepository
+from app.domain.repositories_interfaces import SurfPlanRepositoryInterface
 from app.domain.models import SurfPlan
 
 
 class SurfPlanService:
-    def __init__(self, surf_plan_repository: SurfPlanRepository):
+    def __init__(self, surf_plan_repository: SurfPlanRepositoryInterface):
         self.surf_plan_repository = surf_plan_repository
 
     def generate_surf_plan_for_day_and_location(self, plan_date: date, location_id: int) -> SurfPlan:
