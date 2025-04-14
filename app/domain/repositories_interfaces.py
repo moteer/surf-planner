@@ -15,7 +15,11 @@ class SurfPlanRepositoryInterface(ABC):
         pass
 
 
-class StudentRepository(ABC):
+class StudentRepositoryInterface(ABC):
+    @abstractmethod
+    def get_all_by_date_range(self, start_date: date, end_date: date) -> List[Student]:
+        pass
+
     @abstractmethod
     def get_by_id(self, id: int) -> Optional[Student]:
         pass

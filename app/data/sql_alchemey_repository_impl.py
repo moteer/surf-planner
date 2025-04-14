@@ -1,7 +1,7 @@
 from datetime import date
 from typing import List, Optional
 from sqlalchemy.orm import Session
-from app.domain.repositories_interfaces import SurfPlanRepositoryInterface, StudentRepository, InstructorRepository, GroupRepository, \
+from app.domain.repositories_interfaces import SurfPlanRepositoryInterface, StudentRepositoryInterface, InstructorRepository, GroupRepository, \
     SlotRepository
 from app.domain.models import SurfPlan, Student, Instructor, Group, Slot
 from app.data.orm_models import SurfPlanORM, StudentORM, InstructorORM, GroupORM, SlotORM
@@ -48,9 +48,17 @@ class SQLAlchemySurfPlanRepositoryImpl(SurfPlanRepositoryInterface):
         return result > 0
 
 
-class SQLAlchemyStudentRepository(StudentRepository):
+class SQLAlchemyStudentRepository(StudentRepositoryInterface):
     def __init__(self, session: Session):
         self.session = session
+
+    # TODO: include_arriving: bool = False, include_departing: bool = False
+    def get_all_by_date_range(self, start_date: date, end_date: date) -> List[Student]:
+      orm_students = self.session.query(StudentORM).filter(
+          StudentORM.arrival < start_date, StudentORM.departure > end_date
+      ).all()
+
+      return [orm_student.to_domain() for orm_student in orm_students]
 
     def get_by_id(self, id: int) -> Optional[Student]:
         orm_student = self.session.query(StudentORM).filter(

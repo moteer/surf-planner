@@ -34,13 +34,15 @@ class StudentORM(Base):
     __tablename__ = 'students'
 
     id = Column(Integer, primary_key=True)
-    first_name = Column(String, nullable=False)
-    last_name = Column(String, nullable=False)
+    first_name = Column(String(100), nullable=False)
+    last_name = Column(String(100), nullable=False)
     birthday = Column(Date, nullable=False)
-    gender = Column(String, nullable=False)
-    age_group = Column(String, nullable=False)
-    level = Column(String, nullable=False)
-    booking_number = Column(String, nullable=False, unique=True)
+    gender = Column(String(100), nullable=False)
+    age_group = Column(String(100), nullable=False)
+    level = Column(String(100), nullable=False)
+    booking_number = Column(String(100), nullable=False, unique=True)
+    arrival = Column(Date, nullable=False)
+    departure = Column(Date, nullable=False)
 
     # Relationships
     groups = relationship("GroupORM", secondary=student_group_association, back_populates="students")
@@ -57,7 +59,9 @@ class StudentORM(Base):
             gender=self.gender,
             age_group=self.age_group,
             level=self.level,
-            booking_number=self.booking_number
+            booking_number=self.booking_number,
+            arrival= self.arrival,
+            departure= self.departure
         )
 
     @classmethod
@@ -70,7 +74,9 @@ class StudentORM(Base):
             gender=student.gender,
             age_group=student.age_group,
             level=student.level,
-            booking_number=student.booking_number
+            booking_number=student.booking_number,
+            arrival= student.arrival,
+            departure= student.departure
         )
 
 
@@ -78,8 +84,8 @@ class InstructorORM(Base):
     __tablename__ = 'instructors'
 
     id = Column(Integer, primary_key=True)
-    name = Column(String, nullable=False)
-    certification = Column(String, nullable=False)
+    name = Column(String(100), nullable=False)
+    certification = Column(String(100), nullable=False)
 
     # Relationships
     groups = relationship("GroupORM", secondary=instructor_group_association, back_populates="instructors")
@@ -107,7 +113,7 @@ class GroupORM(Base):
     __tablename__ = 'groups'
 
     id = Column(Integer, primary_key=True)
-    level = Column(String, nullable=False)
+    level = Column(String(100), nullable=False)
 
     # Relationships
     students = relationship("StudentORM", secondary=student_group_association, back_populates="groups")

@@ -11,6 +11,8 @@ class Student:
     age_group: str
     level: str
     booking_number: str
+    arrival: date
+    departure: date
 
 @dataclass
 class Instructor:

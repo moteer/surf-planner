@@ -1,7 +1,8 @@
+from app.services.student_service import StudentService
 from fastapi import APIRouter
 
 router = APIRouter()
 
-@router.get("/surf-planner")
+@router.get("/students")
 def get_surf_plan():
     return {"message": "Surf plan data here"}

@@ -1,10 +1,10 @@
 from fastapi import FastAPI
-from app.api import router as api_router
+from app.api import students_router
 
 app = FastAPI(title="SurfPlanner API", description="API for surf and tide planning", version="1.0")
 
 # Include all routers
-app.include_router(api_router)
+app.include_router(students_router.router)
 
 if __name__ == "__main__":
     import uvicorn

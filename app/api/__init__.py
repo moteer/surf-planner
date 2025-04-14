@@ -1,8 +1,7 @@
 from fastapi import APIRouter
-from app.api import tide, surf_planner
+from app.api import students_router
 
 router = APIRouter()
 
 # Include all individual routers
-router.include_router(tide.router, prefix="/tides", tags=["Tides"])
-router.include_router(surf_planner.router, prefix="/surf-planner", tags=["Surf Planner"])
+router.include_router(students_router.router, prefix="/students", tags=["Surf Planner"])
