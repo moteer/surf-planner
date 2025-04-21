@@ -3,7 +3,6 @@ import os
 # Get database type from environment variables (default: sqlite memory)
 DB_TYPE = "mysql"
 
-print("🍌🍌🍌🍌🍌🍌🍌🍌🍌🍌")
 print(f"DB_TYPE: {DB_TYPE}")
 
 if DB_TYPE == "sqlite":
