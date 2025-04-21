@@ -22,6 +22,7 @@ class Instructor:
 @dataclass
 class Group:
     level: str
+    age_group: str
     students: List[Student] = field(default_factory=list)
     instructors: List[Instructor] = field(default_factory=list)
 
