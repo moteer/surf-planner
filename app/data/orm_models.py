@@ -1,8 +1,9 @@
 from sqlalchemy import Column, Integer, String, Date, ForeignKey, Table, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
+from datetime import datetime
 
-from app.domain.models import Student, Instructor, Group, Slot, SurfPlan
+from app.domain.models import Booking, Student, Instructor, Group, Slot, SurfPlan
 
 # SQLAlchemy Base
 Base = declarative_base()
@@ -34,15 +35,18 @@ class StudentORM(Base):
     __tablename__ = 'students'
 
     id = Column(Integer, primary_key=True)
-    first_name = Column(String(100), nullable=False)
-    last_name = Column(String(100), nullable=False)
-    birthday = Column(Date, nullable=False)
-    gender = Column(String(100), nullable=False)
-    age_group = Column(String(100), nullable=False)
-    level = Column(String(100), nullable=False)
-    booking_number = Column(String(100), nullable=False, unique=True)
-    arrival = Column(Date, nullable=False)
-    departure = Column(Date, nullable=False)
+    first_name = Column(String(100), nullable=True)
+    last_name = Column(String(100), nullable=True)
+    birthday = Column(Date, nullable=True)
+    gender = Column(String(100), nullable=True)
+    age_group = Column(String(100), nullable=True)
+    level = Column(String(100), nullable=True)
+    booking_number = Column(String(100), nullable=True)
+    arrival = Column(Date, nullable=True)
+    departure = Column(Date, nullable=True)
+    booking_status = Column(String(100), nullable=True)
+    number_of_booked_lessons = Column(Integer, nullable=True)
+    surf_lesson_package_name = Column(String(100), nullable=True)
 
     # Relationships
     groups = relationship("GroupORM", secondary=student_group_association, back_populates="students")
@@ -53,6 +57,7 @@ class StudentORM(Base):
     def to_domain(self) -> Student:
         """Convert ORM model to domain model"""
         return Student(
+            id=self.id,
             first_name=self.first_name,
             last_name=self.last_name,
             birthday=self.birthday,
@@ -60,14 +65,18 @@ class StudentORM(Base):
             age_group=self.age_group,
             level=self.level,
             booking_number=self.booking_number,
-            arrival= self.arrival,
-            departure= self.departure
+            arrival=self.arrival,
+            departure=self.departure,
+            booking_status=self.booking_status,
+            number_of_surf_lessons=self.number_of_booked_lessons,
+            surf_lesson_package_name=self.surf_lesson_package_name
         )
 
     @classmethod
     def from_domain(cls, student: Student) -> 'StudentORM':
         """Create ORM model from domain model"""
         return cls(
+            id=student.id,
             first_name=student.first_name,
             last_name=student.last_name,
             birthday=student.birthday,
@@ -75,8 +84,11 @@ class StudentORM(Base):
             age_group=student.age_group,
             level=student.level,
             booking_number=student.booking_number,
-            arrival= student.arrival,
-            departure= student.departure
+            arrival=student.arrival,
+            departure=student.departure,
+            booking_status=student.booking_status,
+            number_of_booked_lessons=student.number_of_surf_lessons,
+            surf_lesson_package_name=student.surf_lesson_package_name
         )
 
 
@@ -199,3 +211,94 @@ class SurfPlanORM(Base):
             date=surf_plan.plan_date,
             slots=[SlotORM.from_domain(slot) for slot in surf_plan.slots]
         )
+
+
+class RawBookingORM(Base):
+    __tablename__ = "bookings"
+    __mapper_args__ = {
+        "primary_key": ["guest_first_name", "guest_last_name", "booking_id"]
+    }
+
+    booking_id = Column(String(100), nullable=False)
+    booker_id = Column(String(100), nullable=False)
+    guest_first_name = Column(String(100), nullable=False)
+    guest_last_name = Column(String(100), nullable=False)
+
+    guest_birthday = Column(Date)
+    guest_gender = Column(String(100))
+    guest_group = Column(String(100))
+    guest_level = Column(String(100))
+    guest_arrival_date = Column(Date)
+    guest_departure_date = Column(Date)
+    booking_status = Column(String(100))
+
+    # Surf lesson options
+    surf_lesson_adults_main_season_package = Column(String(10))
+    surf_lesson_adults_main_season_package_qty = Column(Integer)
+    surf_lesson_kids_main_season_package = Column(String(10))
+    surf_lesson_kids_main_season_package_qty = Column(Integer)
+    surf_course_adults = Column(String(10))
+    surf_course_adults_qty = Column(Integer)
+    surf_course_kids = Column(String(10))
+    surf_course_kids_qty = Column(Integer)
+    surf_lessons = Column(String(10))
+    surf_lessons_qty = Column(Integer)
+    surf_course = Column(String(10))
+    surf_course_qty = Column(Integer)
+    _5_day_surf_course_teens \
+        = Column("5_day_surf_course_teens_from_14____18_years_old", String(10), key="_5_day_surf_course_teens")
+    _5_day_surf_course_teens_from_14____18_years_old_qty \
+        = Column("5_day_surf_course_teens_from_14____18_years_old_qty", Integer, key="_5_day_surf_course_teens_qty")
+    trial_surf_lesson_kids = Column(String(10))
+    trial_surf_lesson_kids_qty = Column(Integer)
+
+    def to_domain(self) -> Booking:
+        """Convert ORM model to domain model"""
+        def get_package_name():
+            if self.surf_lesson_adults_main_season_package.lower() == "yes":
+                return "surf lesson adult main season package"
+            if self.surf_lesson_kids_main_season_package.lower() == "yes":
+                return "surf lesson kids main season package"
+            if self.surf_course_adults.lower() == "yes":
+                return "surf course adult"
+            if self.surf_course_kids.lower() == "yes":
+                return "surf course kids"
+            if self.surf_lessons.lower() == "yes":
+                return "surf lessons"
+            if self.surf_course.lower() == "yes":
+                return "surf course"
+            if self._5_day_surf_course_teens.lower() == "yes":
+                return "5 day surf course teens from 14 - 18 years old"
+            if self.trial_surf_lesson_kids.lower() == "yes":
+                return "trial surf lesson kids"
+
+            return "No package booked"
+
+        return Booking(
+            booking_id=self.booking_id,
+            booker_id=self.booker_id,
+            first_name=self.guest_first_name,
+            last_name=self.guest_last_name,
+            birthday=self.extract_date(self.guest_birthday),
+            gender=self.guest_gender,
+            group=self.guest_group,
+            level=self.guest_level,
+            arrival=self.extract_date(self.guest_arrival_date),
+            departure=self.extract_date(self.guest_departure_date),
+            booking_status=self.booking_status,
+            number_of_surf_lessons=sum([
+                 int(self.surf_lesson_adults_main_season_package_qty),
+                 int(self.surf_lesson_kids_main_season_package_qty),
+                 int(self.surf_course_adults_qty),
+                 int(self.surf_course_kids_qty),
+                 int(self.surf_lessons_qty),
+                 int(self.surf_course_qty),
+                 int(self._5_day_surf_course_teens_from_14____18_years_old_qty),
+                 int(self.trial_surf_lesson_kids_qty)
+             ]),
+            surf_lesson_package_name=get_package_name()
+        )
+
+    def extract_date(self, str_to_date):
+
+        return None if not str_to_date else datetime.strptime(str_to_date, '%Y-%m-%d').date()

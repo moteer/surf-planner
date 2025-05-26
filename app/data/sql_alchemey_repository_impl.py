@@ -1,10 +1,19 @@
 from datetime import date
 from typing import List, Optional
 from sqlalchemy.orm import Session
-from app.domain.repositories_interfaces import SurfPlanRepositoryInterface, StudentRepositoryInterface, InstructorRepository, GroupRepository, \
+from app.domain.repositories_interfaces import BookingRawRepositoryInterface, SurfPlanRepositoryInterface, StudentRepositoryInterface, InstructorRepository, GroupRepository, \
     SlotRepository
 from app.domain.models import SurfPlan, Student, Instructor, Group, Slot
-from app.data.orm_models import SurfPlanORM, StudentORM, InstructorORM, GroupORM, SlotORM
+from app.data.orm_models import SurfPlanORM, StudentORM, InstructorORM, GroupORM, SlotORM, RawBookingORM
+
+
+class SQLAlchemyBookingRawRepositoryImpl(BookingRawRepositoryInterface):
+    def __init__(self, session: Session):
+        self.session = session
+
+    def get_all(self) -> List[RawBookingORM]:
+        raw_booking_orms = self.session.query(RawBookingORM).all()
+        return [raw_booking_orm.to_domain() for raw_booking_orm in raw_booking_orms]
 
 
 class SQLAlchemySurfPlanRepositoryImpl(SurfPlanRepositoryInterface):
@@ -48,7 +57,8 @@ class SQLAlchemySurfPlanRepositoryImpl(SurfPlanRepositoryInterface):
         return result > 0
 
 
-class SQLAlchemyStudentRepository(StudentRepositoryInterface):
+class SQLAlchemyStudentRepositoryImpl(StudentRepositoryInterface):
+
     def __init__(self, session: Session):
         self.session = session
 
@@ -67,22 +77,23 @@ class SQLAlchemyStudentRepository(StudentRepositoryInterface):
 
         return orm_student.to_domain() if orm_student else None
 
-    def get_by_booking_number(self, booking_number: str) -> Optional[Student]:
-        orm_student = self.session.query(StudentORM).filter(
+    def get_by_booking_number(self, booking_number: str) -> List[Student]:
+
+        orm_students = self.session.query(StudentORM).filter(
             StudentORM.booking_number == booking_number
-        ).first()
-
-        return orm_student.to_domain() if orm_student else None
-
+        )
+        return [orm_student.to_domain() for orm_student in orm_students]
     def get_all(self) -> List[Student]:
         orm_students = self.session.query(StudentORM).all()
         return [orm_student.to_domain() for orm_student in orm_students]
 
-    def save(self, student: Student) -> Student:
+
+    # WRONG !!!!! need to find id
+    def update(self, id: int, student: Student) -> Student:
         orm_student = StudentORM.from_domain(student)
 
         existing_student = self.session.query(StudentORM).filter(
-            StudentORM.booking_number == orm_student.booking_number
+            StudentORM.id == id
         ).first()
 
         if existing_student:
@@ -104,6 +115,21 @@ class SQLAlchemyStudentRepository(StudentRepositoryInterface):
         ).delete()
         self.session.commit()
         return result > 0
+
+    def save(self, student: Student) -> Student:
+        orm_student = StudentORM.from_domain(student)
+        print("💾 save student:")
+        print(orm_student)
+        self.session.add(orm_student)
+        self.session.commit()
+        return orm_student.to_domain()
+
+    def save_all(self, students: List[Student]) -> List[Student]:
+        saved_students = []
+        for student in students:
+            saved_student = self.save(StudentORM.from_domain(student))
+            saved_students.append(saved_student)
+        return saved_students
 
 
 class SQLAlchemyInstructorRepository(InstructorRepository):

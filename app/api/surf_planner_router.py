@@ -5,4 +5,5 @@ router = APIRouter()
 
 @router.get("/students")
 def get_surf_plan():
-    return {"message": "Surf plan data here"}
+
+    return surfplan

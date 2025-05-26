@@ -2,8 +2,27 @@ from dataclasses import dataclass, field
 from datetime import date, datetime
 from typing import List
 
+
+@dataclass
+class Booking:
+    booking_id: str
+    booker_id: str
+    first_name: str
+    last_name: str
+    birthday: date
+    gender: str
+    group: str
+    level: str
+    arrival: date
+    departure: date
+    booking_status: date
+    number_of_surf_lessons: int
+    surf_lesson_package_name: str
+
+
 @dataclass
 class Student:
+    id: int
     first_name: str
     last_name: str
     birthday: date
@@ -13,11 +32,16 @@ class Student:
     booking_number: str
     arrival: date
     departure: date
+    booking_status: date
+    number_of_surf_lessons: int
+    surf_lesson_package_name: str
+
 
 @dataclass
 class Instructor:
     name: str
     certification: str
+
 
 @dataclass
 class Group:

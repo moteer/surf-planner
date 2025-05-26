@@ -2,7 +2,14 @@ from abc import ABC, abstractmethod
 from datetime import date
 from typing import Optional, List
 
-from app.domain.models import SurfPlan, Student, Instructor, Group, Slot
+from app.domain.models import Booking, SurfPlan, Student, Instructor, Group, Slot
+
+
+class BookingRawRepositoryInterface(ABC):
+
+    @abstractmethod
+    def get_all(self) -> List[Booking]:
+        pass
 
 
 class SurfPlanRepositoryInterface(ABC):
@@ -34,6 +41,13 @@ class StudentRepositoryInterface(ABC):
 
     @abstractmethod
     def save(self, student: Student) -> Student:
+        pass
+
+    @abstractmethod
+    def save_all(self, students: List[Student]) -> List[Student]:
+        pass
+    @abstractmethod
+    def update(self, id: int, student: Student) -> Student:
         pass
 
     @abstractmethod
