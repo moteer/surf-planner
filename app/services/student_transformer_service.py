@@ -34,8 +34,8 @@ class StudentTransformerService:
                 if self._has_changed(incoming_student, match):
                     print(f"🔁 Updating student {incoming_student.booking_number}: {incoming_student.first_name} {incoming_student.last_name}")
                     self.student_repository.update(match.id, incoming_student)
-                else:
-                    print(f"✅ No change for student {incoming_student.booking_number}: {incoming_student.first_name} {incoming_student.last_name}")
+                # else:
+                #     print(f"✅ No change for student {incoming_student.booking_number}: {incoming_student.first_name} {incoming_student.last_name}")
             else:
                 print(f"➕ Adding new student {incoming_student.booking_number}: {incoming_student.first_name} {incoming_student.last_name}")
                 self.student_repository.save(incoming_student)

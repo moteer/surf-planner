@@ -10,7 +10,8 @@ from app.services.tide_service_interface import TideServiceInterface
 
 
 class SurfPlanService:
-    def __init__(self, surf_plan_repository: SurfPlanRepositoryInterface,
+    def __init__(self,
+                 surf_plan_repository: SurfPlanRepositoryInterface,
                  student_service: StudentService,
                  tide_service: TideServiceInterface):
 
@@ -18,9 +19,9 @@ class SurfPlanService:
         self.student_service = student_service
         self.tide_service = tide_service
 
-    def generate_surf_plan_for_day_and_location(self, plan_date: date, location_id: int) -> SurfPlan:
+    def generate_surf_plan_for_day_and_location(self, plan_date: date) -> SurfPlan:
         # Check if plan exists for this date already
-        existing_plan = self.surf_plan_repository.get_by_date_and_location(plan_date, location_id)
+        existing_plan = self.surf_plan_repository.get_by_date_and_location(plan_date)
         if existing_plan:
             return existing_plan
 

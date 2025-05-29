@@ -20,7 +20,7 @@ class SQLAlchemySurfPlanRepositoryImpl(SurfPlanRepositoryInterface):
     def __init__(self, session: Session):
         self.session = session
 
-    def get_by_date_and_location(self, plan_date: date, location_id: int) -> Optional[SurfPlan]:
+    def get_by_date_and_location(self, plan_date: date) -> Optional[SurfPlan]:
         orm_surf_plan = self.session.query(SurfPlanORM).filter(
             SurfPlanORM.plan_date == plan_date
         ).first()

@@ -66,9 +66,8 @@ def parse_mysql_url(mysql_url):
         "db": parsed.path.lstrip("/")
     }
 
-def main():
+def csv_insert(csv_path: str):
     mysql_url = "mysql+pymysql://admin:admin@localhost:3306/sea_natives_surfplanner"
-    csv_path = "csvs/2025-05-26-surf-plan_evening.csv"
     table_name = "bookings"
 
     print(f"📂 Loading CSV from '{csv_path}'...")
@@ -115,5 +114,7 @@ def print_empty_columns(df):
     print("💯columns left")
     print(len(df.columns))
 
+
+
 if __name__ == "__main__":
-    main()
+    csv_insert("csvs/2025-05-28-surf-plan.csv")
