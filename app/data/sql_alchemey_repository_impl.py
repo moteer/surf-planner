@@ -5,7 +5,7 @@ from app.domain.repositories_interfaces import BookingRawRepositoryInterface, Su
     SlotRepository
 from app.domain.models import SurfPlan, Student, Instructor, Group, Slot
 from app.data.orm_models import SurfPlanORM, StudentORM, InstructorORM, GroupORM, SlotORM, RawBookingORM
-
+from sqlalchemy import and_
 
 class SQLAlchemyBookingRawRepositoryImpl(BookingRawRepositoryInterface):
     def __init__(self, session: Session):
@@ -17,7 +17,7 @@ class SQLAlchemyBookingRawRepositoryImpl(BookingRawRepositoryInterface):
 
     def get_for_date(self, start_date: date, end_date: date):
         orm_bookings = self.session.query(RawBookingORM).filter(
-            RawBookingORM.guest_arrival_date < start_date, RawBookingORM.guest_departure_date > end_date
+            and_(RawBookingORM.guest_arrival_date < start_date, RawBookingORM.guest_departure_date > end_date)
         ).all()
 
         return [bookings.to_domain() for bookings in orm_bookings]
@@ -71,7 +71,7 @@ class SQLAlchemyStudentRepositoryImpl(StudentRepositoryInterface):
     # TODO: include_arriving: bool = False, include_departing: bool = False
     def get_all_by_date_range(self, start_date: date, end_date: date) -> List[Student]:
       orm_students = self.session.query(StudentORM).filter(
-          StudentORM.arrival < start_date, StudentORM.departure > end_date
+          and_(StudentORM.arrival < start_date ,StudentORM.departure > end_date)
       ).all()
 
       return [orm_student.to_domain() for orm_student in orm_students]

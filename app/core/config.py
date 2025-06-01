@@ -1,8 +1,6 @@
 import os
 
-DB_USER = os.getenv("DB_USER")
-DB_PW = os.getenv("DB_PW")
-DATABASE_URL =  f"mysql+pymysql://{DB_USER}:{DB_PW}@localhost/sea_natives_surfplanner"
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 print(f"DATABASE_URL: {DATABASE_URL}")
 

@@ -25,7 +25,7 @@ def get_diets_of_guests_per_day(date: Optional[date] = Query(None),
 
 
 @router.get("/students/oncamp")
-def get_surf_plan(date: Optional[date] = Query(None),
+def get_surf_plan(date: Optional[date] = date.today(),
                   session: Session = Depends(get_db)):
     student_service = StudentService(SQLAlchemyStudentRepositoryImpl(session))
     return student_service.get_all_students_for_date(date)
@@ -33,7 +33,7 @@ def get_surf_plan(date: Optional[date] = Query(None),
 
 # ranges
 @router.get("/surfplan")
-def get_surf_plan(plan_date: Optional[date] = Query(None),
+def get_surf_plan(plan_date: Optional[date] = date.today(),
                   session: Session = Depends(get_db)):
     surf_plan_service = SurfPlanService(
         SQLAlchemySurfPlanRepositoryImpl(session),
@@ -45,8 +45,8 @@ def get_surf_plan(plan_date: Optional[date] = Query(None),
 
 
 def get_students(
-        start_date: Optional[date] = Query(None),
-        end_date: Optional[date] = Query(None),
+        start_date: Optional[date] = date.today(),
+        end_date: Optional[date] = date.today(),
         session: Session = Depends(get_db)):
     student_service = StudentService(SQLAlchemyStudentRepositoryImpl(session))
 
@@ -58,7 +58,7 @@ def get_students(
 
 @router.get("/students/export")
 def export_students_to_excel(
-        date: Optional[date] = Query(None),
+        date: Optional[date] = date.today(),
         session: Session = Depends(get_db)):
     student_service = StudentService(SQLAlchemyStudentRepositoryImpl(session))
 

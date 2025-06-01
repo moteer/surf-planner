@@ -4,8 +4,6 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(title="SurfPlanner API", description="API for surf and tide planning", version="1.0")
 
-# Include all routers
-app.include_router(students_router.router)
 
 app.add_middleware(
     CORSMiddleware,
@@ -14,6 +12,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include all routers
+app.include_router(students_router.router)
+
 
 if __name__ == "__main__":
     import uvicorn
