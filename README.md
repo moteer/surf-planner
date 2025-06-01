@@ -3,7 +3,7 @@
 ```bash
 DB_USER=admin DB_PW=admin uvicorn main:app --reload
 ```
-## recreate database tables 
+## load new csv and transform it (add csv path before)
 
 ```bash
 cd loader 

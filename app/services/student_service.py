@@ -11,26 +11,30 @@ class StudentService:
     def get_all_students(self):
         return self.student_repository.get_all()
 
-    def get_students_by_date_range(self, start_date: date, end_date: date):
-        if not isinstance(start_date, date):
-            raise Exception("Parameter must be a date")
+    def get_all_students_for_date(self, _date):
+        return [student for student in self.student_repository.get_all_by_date_range(_date, _date)
+                if student.booking_status != "cancelled"]
 
-        if start_date > end_date:
-            raise Exception("Start date must be before end date")
+        def get_students_with_booked_lessons_by_date_range(self, start_date: date, end_date: date):
+            if not isinstance(start_date, date):
+                raise Exception("Parameter must be a date")
 
-        students = self.student_repository.get_all()
+            if start_date > end_date:
+                raise Exception("Start date must be before end date")
 
-        return [student for student in students if student.arrival <= end_date and student.departure >= start_date]
+            students = self.student_repository.get_students_with_booked_lessons()
 
-    def get_students_by_level(self, level: str):
+            return [student for student in students if student.arrival <= end_date and student.departure >= start_date]
 
-        students = self.get_students_from_repo_fake()
+        def get_students_by_level(self, level: str):
 
-        valid_levels = {student.level for student in students}
-        if level not in valid_levels:
-            return None
-        return [student for student in students if student.level == level]
+            students = self.get_students_from_repo_fake()
 
-    def save_all(self, students):
-        for student in students:
-            self.student_repository.save(student)
+            valid_levels = {student.level for student in students}
+            if level not in valid_levels:
+                return None
+            return [student for student in students if student.level == level]
+
+        def save_all(self, students):
+            for student in students:
+                self.student_repository.save(student)

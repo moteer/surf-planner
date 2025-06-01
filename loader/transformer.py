@@ -15,7 +15,7 @@ import os
 
 def main():
     # reads
-    raw_csv_insert.csv_insert("csvs/2025-05-28-surf-plan.csv")
+    raw_csv_insert.csv_insert("csvs/2025-05-30-surf-plan.csv")
 
     # Manually simulate dependency injection for DB session
     session = next(get_db())

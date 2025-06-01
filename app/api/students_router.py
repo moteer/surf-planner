@@ -1,33 +1,47 @@
-from datetime import date, datetime
-from typing import Annotated, Optional
+import pandas as pd
+from collections import defaultdict
+from datetime import date
+from fastapi import APIRouter, Depends, Query, Response
+from io import BytesIO
+from sqlalchemy.orm import Session
+from typing import Optional
+
 from app.core.db import get_db
 from app.data.sql_alchemey_repository_impl import SQLAlchemyStudentRepositoryImpl, SQLAlchemyBookingRawRepositoryImpl
+from app.data.sql_alchemey_repository_impl import SQLAlchemySurfPlanRepositoryImpl
 from app.services.student_service import StudentService
 from app.services.student_transformer_service import StudentTransformerService
-from fastapi import APIRouter, Depends, Query, Response
-from sqlalchemy.orm import Session
-from collections import defaultdict
-from io import BytesIO
-import pandas as pd
-
-from app.data.sql_alchemey_repository_impl import SQLAlchemySurfPlanRepositoryImpl
 from app.services.surf_plan_service import SurfPlanService
 from app.services.tide_service_interface import TideServiceMockImpl
+
 router = APIRouter()
+
+
+@router.get("/bookings")
+def get_diets_of_guests_per_day(date: Optional[date] = Query(None),
+                                session: Session = Depends(get_db)):
+    booking_repository = SQLAlchemyBookingRawRepositoryImpl(session)
+    return [booking for booking in booking_repository.get_for_date(date, date) if booking.booking_status != "cancelled"]
+
+
+@router.get("/students/oncamp")
+def get_surf_plan(date: Optional[date] = Query(None),
+                  session: Session = Depends(get_db)):
+    student_service = StudentService(SQLAlchemyStudentRepositoryImpl(session))
+    return student_service.get_all_students_for_date(date)
 
 
 # ranges
 @router.get("/surfplan")
 def get_surf_plan(plan_date: Optional[date] = Query(None),
                   session: Session = Depends(get_db)):
-
     surf_plan_service = SurfPlanService(
         SQLAlchemySurfPlanRepositoryImpl(session),
         StudentService(SQLAlchemyStudentRepositoryImpl(session)),
         TideServiceMockImpl())
 
-    return surf_plan_service\
-        .generate_surf_plan_for_day_and_location(plan_date if plan_date is not None else date.today())
+    return surf_plan_service \
+        .generate_surf_plan_for_day(plan_date if plan_date is not None else date.today())
 
 
 def get_students(
@@ -37,11 +51,9 @@ def get_students(
     student_service = StudentService(SQLAlchemyStudentRepositoryImpl(session))
 
     if start_date and end_date:
-        return student_service.get_students_by_date_range(start_date, end_date)
+        return student_service.get_students_with_booked_lessons_by_date_range(start_date, end_date)
 
     return student_service.get_all_students()
-
-
 
 
 @router.get("/students/export")
@@ -51,7 +63,7 @@ def export_students_to_excel(
     student_service = StudentService(SQLAlchemyStudentRepositoryImpl(session))
 
     if date:
-        students = student_service.get_students_by_date_range(date, date)
+        students = student_service.get_students_with_booked_lessons_by_date_range(date, date)
     else:
         students = student_service.get_all_students()
 
@@ -131,7 +143,7 @@ def export_students_as_html(
     student_service = StudentService(SQLAlchemyStudentRepositoryImpl(session))
 
     if date:
-        students = student_service.get_students_by_date_range(date, date)
+        students = student_service.get_students_with_booked_lessons_by_date_range(date, date)
     else:
         students = student_service.get_all_students()
 
@@ -171,6 +183,8 @@ def export_students_as_html(
 
     html += "</body></html>"
     return html
+
+
 @router.get("/transform/students")
 def transform_students(session: Session = Depends(get_db)):
     student_transformer_service = StudentTransformerService(SQLAlchemyBookingRawRepositoryImpl(session),

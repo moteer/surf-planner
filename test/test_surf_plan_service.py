@@ -81,7 +81,7 @@ class TestSurfPlanService(unittest.TestCase):
 
         # Create mock Student Service
         mock_student_service = Mock()
-        mock_student_service.get_students_by_date_range.return_value = self.test_students
+        mock_student_service.get_students_with_booked_lessons_by_date_range.return_value = self.test_students
 
         # Create mock Tide Service
         mock_tide_service = Mock()
@@ -99,7 +99,7 @@ class TestSurfPlanService(unittest.TestCase):
         service = SurfPlanService(mock_repository, mock_student_service, mock_tide_service)
 
         # Execute service method
-        surf_plan = service.generate_surf_plan_for_day_and_location(self.test_surf_plan_date, self.test_location_id)
+        surf_plan = service.generate_surf_plan_for_day(self.test_surf_plan_date, self.test_location_id)
 
 
         # Assertions
@@ -328,7 +328,7 @@ class TestSurfPlanServiceForLargeGroup(unittest.TestCase):
 
         # Create mock Student Service
         mock_student_service = Mock()
-        mock_student_service.get_students_by_date_range.return_value = self.test_students
+        mock_student_service.get_students_with_booked_lessons_by_date_range.return_value = self.test_students
 
         # Create mock Tide Service
         mock_tide_service = Mock()
@@ -346,7 +346,7 @@ class TestSurfPlanServiceForLargeGroup(unittest.TestCase):
         service = SurfPlanService(mock_repository, mock_student_service, mock_tide_service)
 
         # Execute service method
-        surf_plan = service.generate_surf_plan_for_day_and_location(self.test_surf_plan_date, self.test_location_id)
+        surf_plan = service.generate_surf_plan_for_day(self.test_surf_plan_date, self.test_location_id)
 
         # Assertions
         self.assertIsNotNone(surf_plan)

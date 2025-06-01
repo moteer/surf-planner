@@ -15,12 +15,18 @@ class SQLAlchemyBookingRawRepositoryImpl(BookingRawRepositoryInterface):
         raw_booking_orms = self.session.query(RawBookingORM).all()
         return [raw_booking_orm.to_domain() for raw_booking_orm in raw_booking_orms]
 
+    def get_for_date(self, start_date: date, end_date: date):
+        orm_bookings = self.session.query(RawBookingORM).filter(
+            RawBookingORM.guest_arrival_date < start_date, RawBookingORM.guest_departure_date > end_date
+        ).all()
+
+        return [bookings.to_domain() for bookings in orm_bookings]
 
 class SQLAlchemySurfPlanRepositoryImpl(SurfPlanRepositoryInterface):
     def __init__(self, session: Session):
         self.session = session
 
-    def get_by_date_and_location(self, plan_date: date) -> Optional[SurfPlan]:
+    def get_by_date(self, plan_date: date) -> Optional[SurfPlan]:
         orm_surf_plan = self.session.query(SurfPlanORM).filter(
             SurfPlanORM.plan_date == plan_date
         ).first()
@@ -85,6 +91,12 @@ class SQLAlchemyStudentRepositoryImpl(StudentRepositoryInterface):
         return [orm_student.to_domain() for orm_student in orm_students]
     def get_all(self) -> List[Student]:
         orm_students = self.session.query(StudentORM).all()
+        return [orm_student.to_domain() for orm_student in orm_students]
+
+    def get_students_with_booked_lessons(self) -> List[Student]:
+        orm_students = self.session.query(StudentORM).filter(
+            StudentORM.number_of_surf_lessons > 0
+        ).all()
         return [orm_student.to_domain() for orm_student in orm_students]
 
 

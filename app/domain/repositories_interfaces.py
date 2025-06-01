@@ -14,7 +14,7 @@ class BookingRawRepositoryInterface(ABC):
 
 class SurfPlanRepositoryInterface(ABC):
     @abstractmethod
-    def get_by_date_and_location(self, plan_date: date) -> SurfPlan:
+    def get_by_date(self, plan_date: date) -> SurfPlan:
         pass
 
     @abstractmethod
@@ -37,6 +37,10 @@ class StudentRepositoryInterface(ABC):
 
     @abstractmethod
     def get_all(self) -> List[Student]:
+        pass
+
+    @abstractmethod
+    def get_students_with_booked_lessons(self) -> List[Student]:
         pass
 
     @abstractmethod

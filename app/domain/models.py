@@ -18,6 +18,9 @@ class Booking:
     booking_status: date
     number_of_surf_lessons: int
     surf_lesson_package_name: str
+    diet: str
+    notes_one: str
+    tent: str
 
 
 @dataclass
@@ -62,3 +65,4 @@ class SurfPlan:
     plan_date: date
     slots: List[Slot] = field(default_factory=list)
     id: int = None
+    non_participating_guests: List[Student] = field(default_factory=list)

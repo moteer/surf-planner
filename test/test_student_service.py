@@ -88,7 +88,7 @@ class TestStudentService(unittest.TestCase):
         self.setup_range_students()
         student_service = StudentService(mock_repository)
 
-        present_students = student_service.get_students_by_date_range(date(2025, 7, 1), date(2025, 7, 3))
+        present_students = student_service.get_students_with_booked_lessons_by_date_range(date(2025, 7, 1), date(2025, 7, 3))
         self.assertEqual(
             present_students,
             [
@@ -113,7 +113,7 @@ class TestStudentService(unittest.TestCase):
         self.setup_range_students()
         student_service = StudentService(mock_repository)
 
-        present_students = student_service.get_students_by_date_range(date(2025, 7, 3), date(2025, 7, 3))
+        present_students = student_service.get_students_with_booked_lessons_by_date_range(date(2025, 7, 3), date(2025, 7, 3))
         self.assertEqual(
             present_students,
             [

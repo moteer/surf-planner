@@ -45,7 +45,7 @@ class StudentORM(Base):
     arrival = Column(Date, nullable=True)
     departure = Column(Date, nullable=True)
     booking_status = Column(String(100), nullable=True)
-    number_of_booked_lessons = Column(Integer, nullable=True)
+    number_of_surf_lessons = Column(Integer, nullable=True)
     surf_lesson_package_name = Column(String(100), nullable=True)
 
     # Relationships
@@ -68,13 +68,14 @@ class StudentORM(Base):
             arrival=self.arrival,
             departure=self.departure,
             booking_status=self.booking_status,
-            number_of_surf_lessons=self.number_of_booked_lessons,
+            number_of_surf_lessons=self.number_of_surf_lessons,
             surf_lesson_package_name=self.surf_lesson_package_name
         )
 
     @classmethod
     def from_domain(cls, student: Student) -> 'StudentORM':
         """Create ORM model from domain model"""
+        print(f"☠️{student}")
         return cls(
             id=student.id,
             first_name=student.first_name,
@@ -87,7 +88,7 @@ class StudentORM(Base):
             arrival=student.arrival,
             departure=student.departure,
             booking_status=student.booking_status,
-            number_of_booked_lessons=student.number_of_surf_lessons,
+            number_of_surf_lessons=student.number_of_surf_lessons,
             surf_lesson_package_name=student.surf_lesson_package_name
         )
 
@@ -251,6 +252,9 @@ class RawBookingORM(Base):
         = Column("5_day_surf_course_teens_from_14____18_years_old_qty", Integer, key="_5_day_surf_course_teens_qty")
     trial_surf_lesson_kids = Column(String(10))
     trial_surf_lesson_kids_qty = Column(Integer)
+    guest_diet = Column(String(20))
+    notes_one = Column("notes.1", String(100), key="notes_one")
+    accommodations = Column(String(100))
 
     def to_domain(self) -> Booking:
         """Convert ORM model to domain model"""
@@ -296,7 +300,10 @@ class RawBookingORM(Base):
                  int(self._5_day_surf_course_teens_from_14____18_years_old_qty),
                  int(self.trial_surf_lesson_kids_qty)
              ]),
-            surf_lesson_package_name=get_package_name()
+            surf_lesson_package_name=get_package_name(),
+            diet=self.guest_diet,
+            notes_one=self.notes_one,
+            tent=self.accommodations
         )
 
     def extract_date(self, str_to_date):
