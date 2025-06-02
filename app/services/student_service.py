@@ -1,7 +1,6 @@
 from datetime import date
 from app.domain.repositories_interfaces import StudentRepositoryInterface
 
-
 class StudentService:
 
     def __init__(self, student_repository: StudentRepositoryInterface):
@@ -38,3 +37,5 @@ class StudentService:
         def save_all(self, students):
             for student in students:
                 self.student_repository.save(student)
+
+

@@ -1,7 +1,9 @@
 from app.data.orm_models import Student
 from app.domain.repositories_interfaces import BookingRawRepositoryInterface, StudentRepositoryInterface
-from collections import Counter
 from deepdiff import DeepDiff
+from fastapi import UploadFile
+import tempfile
+from app.services.loader.raw_csv_insert import csv_insert
 
 class StudentTransformerService:
 
@@ -9,6 +11,15 @@ class StudentTransformerService:
                  student_repository: StudentRepositoryInterface):
         self.bookings_repository = bookings_repository
         self.student_repository = student_repository
+
+    def import_csv_file(self, file: UploadFile):
+
+        # Save to a temp file and pass to existing import logic
+        with tempfile.NamedTemporaryFile(delete=True, suffix=".csv") as tmp:
+            tmp.write(file.file.read())
+            tmp.flush()
+            csv_insert(tmp.name)
+            self.transform_all_bookings_into_students()
 
     def match_save_students(self, students_to_merge, students_in_db):
         """
@@ -32,14 +43,15 @@ class StudentTransformerService:
 
             if match:
                 if self._has_changed(incoming_student, match):
-                    print(f"🔁 Updating student {incoming_student.booking_number}: {incoming_student.first_name} {incoming_student.last_name}")
+                    print(
+                        f"🔁 Updating student {incoming_student.booking_number}: {incoming_student.first_name} {incoming_student.last_name}")
                     self.student_repository.update(match.id, incoming_student)
                 # else:
                 #     print(f"✅ No change for student {incoming_student.booking_number}: {incoming_student.first_name} {incoming_student.last_name}")
             else:
-                print(f"➕ Adding new student {incoming_student.booking_number}: {incoming_student.first_name} {incoming_student.last_name}")
+                print(
+                    f"➕ Adding new student {incoming_student.booking_number}: {incoming_student.first_name} {incoming_student.last_name}")
                 self.student_repository.save(incoming_student)
-
 
     def _is_probable_match(self, student1, student2):
         """Basic heuristic to guess if two students are the same person."""

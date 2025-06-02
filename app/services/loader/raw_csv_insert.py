@@ -2,7 +2,7 @@ import pandas as pd
 import pymysql
 import numpy as np
 from urllib.parse import urlparse
-
+from app.core.config import DATABASE_URL
 def clean_dataframe(df):
     df.columns = [col.strip().replace('%', 'percent')
                   .replace(' ', '_')
@@ -67,7 +67,6 @@ def parse_mysql_url(mysql_url):
     }
 
 def csv_insert(csv_path: str):
-    mysql_url = "mysql+pymysql://admin:admin@localhost:3306/sea_natives_surfplanner"
     table_name = "bookings"
 
     print(f"📂 Loading CSV from '{csv_path}'...")
@@ -84,7 +83,7 @@ def csv_insert(csv_path: str):
     print(df.columns.values)
 
     print(f"🔌 Connecting to MySQL...")
-    conn_params = parse_mysql_url(mysql_url)
+    conn_params = parse_mysql_url(DATABASE_URL)
     connection = pymysql.connect(
         charset="utf8mb4",
         cursorclass=pymysql.cursors.DictCursor,

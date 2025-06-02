@@ -4,4 +4,4 @@ __pycache__/
 *.pyc
 .vscode
 env
-loader/csvs/
+app/services/loader/csvs/

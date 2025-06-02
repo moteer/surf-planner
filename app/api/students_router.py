@@ -1,7 +1,7 @@
 import pandas as pd
 from collections import defaultdict
 from datetime import date
-from fastapi import APIRouter, Depends, Query, Response
+from fastapi import APIRouter, Depends, Query, Response, UploadFile, File, HTTPException
 from io import BytesIO
 from sqlalchemy.orm import Session
 from typing import Optional
@@ -10,11 +10,27 @@ from app.core.db import get_db
 from app.data.sql_alchemey_repository_impl import SQLAlchemyStudentRepositoryImpl, SQLAlchemyBookingRawRepositoryImpl
 from app.data.sql_alchemey_repository_impl import SQLAlchemySurfPlanRepositoryImpl
 from app.services.student_service import StudentService
-from app.services.student_transformer_service import StudentTransformerService
 from app.services.surf_plan_service import SurfPlanService
 from app.services.tide_service_interface import TideServiceMockImpl
+from fastapi import APIRouter, UploadFile, File, HTTPException
+from app.services.student_transformer_service import StudentTransformerService
 
 router = APIRouter()
+
+
+@router.post("/import-bookings")
+async def import_bookings(file: UploadFile = File(...),
+                          session: Session = Depends(get_db)):
+    if not file.filename.endswith(".csv"):
+        raise HTTPException(status_code=400, detail="Only CSV files are allowed.")
+    try:
+        student_transformer_service = \
+            StudentTransformerService(SQLAlchemyBookingRawRepositoryImpl(session),
+                                      SQLAlchemyStudentRepositoryImpl(session))
+        student_transformer_service.import_csv_file(file)
+        return {"message": "CSV imported successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Import failed: {str(e)}")
 
 
 @router.get("/bookings")
@@ -187,12 +203,6 @@ def export_students_as_html(
 
 @router.get("/transform/students")
 def transform_students(session: Session = Depends(get_db)):
-    student_transformer_service = StudentTransformerService(SQLAlchemyBookingRawRepositoryImpl(session),
-                                                            SQLAlchemyStudentRepositoryImpl(session))
-
-    student_transformer_service.transform_all_bookings_into_students()
-
+    student_transformer_service.transform_all_bookings_to_students()
     student_service = StudentService(SQLAlchemyStudentRepositoryImpl(session))
-    print("✅ Done transforming bookings into students")
-
     return student_service.get_all_students()

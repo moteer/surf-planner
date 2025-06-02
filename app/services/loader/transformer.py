@@ -8,9 +8,6 @@ sys.path.append(project_root)
 
 from app.api.students_router import transform_students
 from app.core.db import get_db
-from datetime import date
-from fastapi import Query
-import os
 
 
 def main():
