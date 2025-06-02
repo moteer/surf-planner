@@ -1,12 +1,5 @@
 # surf-planner
 ## start app 
 ```bash
-DB_USER=admin DB_PW=admin uvicorn main:app --reload
+DATABASE_URL=mysql+pymysql://admin:admin@localhost/surfplanner uvicorn main:app --reload --host 127.0.0.1 --port 8000
 ```
-## load new csv and transform it (add csv path before)
-
-```bash
-cd loader 
-DB_USER=admin DB_PW=admin  python transformer.py
-```
-

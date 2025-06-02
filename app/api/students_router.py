@@ -17,6 +17,9 @@ from app.services.student_transformer_service import StudentTransformerService
 
 router = APIRouter()
 
+@router.get("/test-cors")
+def test_cors():
+    return {"message": "CORS works"}
 
 @router.post("/import-bookings")
 async def import_bookings(file: UploadFile = File(...),
