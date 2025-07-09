@@ -1,11 +1,13 @@
 from datetime import date
 from typing import List, Optional
 from sqlalchemy.orm import Session
-from app.domain.repositories_interfaces import BookingRawRepositoryInterface, SurfPlanRepositoryInterface, StudentRepositoryInterface, InstructorRepository, GroupRepository, \
+from app.domain.repositories_interfaces import BookingRawRepositoryInterface, SurfPlanRepositoryInterface, \
+    StudentRepositoryInterface, InstructorRepository, GroupRepository, \
     SlotRepository
 from app.domain.models import SurfPlan, Student, Instructor, Group, Slot
 from app.data.orm_models import SurfPlanORM, StudentORM, InstructorORM, GroupORM, SlotORM, RawBookingORM
 from sqlalchemy import and_
+
 
 class SQLAlchemyBookingRawRepositoryImpl(BookingRawRepositoryInterface):
     def __init__(self, session: Session):
@@ -21,6 +23,17 @@ class SQLAlchemyBookingRawRepositoryImpl(BookingRawRepositoryInterface):
         ).all()
 
         return [bookings.to_domain() for bookings in orm_bookings]
+
+    def get_for_date_inclusive(self, start_date: date, end_date: date):
+        orm_bookings = self.session.query(RawBookingORM).filter(
+            and_(
+                RawBookingORM.guest_arrival_date < end_date,
+                RawBookingORM.guest_departure_date > start_date
+            )
+        ).all()
+
+        return [bookings.to_domain() for bookings in orm_bookings]
+
 
 class SQLAlchemySurfPlanRepositoryImpl(SurfPlanRepositoryInterface):
     def __init__(self, session: Session):
@@ -70,11 +83,11 @@ class SQLAlchemyStudentRepositoryImpl(StudentRepositoryInterface):
 
     # TODO: include_arriving: bool = False, include_departing: bool = False
     def get_all_by_date_range(self, start_date: date, end_date: date) -> List[Student]:
-      orm_students = self.session.query(StudentORM).filter(
-          and_(StudentORM.arrival < start_date ,StudentORM.departure > end_date)
-      ).all()
+        orm_students = self.session.query(StudentORM).filter(
+            and_(StudentORM.arrival < start_date, StudentORM.departure > end_date)
+        ).all()
 
-      return [orm_student.to_domain() for orm_student in orm_students]
+        return [orm_student.to_domain() for orm_student in orm_students]
 
     def get_by_id(self, id: int) -> Optional[Student]:
         orm_student = self.session.query(StudentORM).filter(
@@ -89,6 +102,7 @@ class SQLAlchemyStudentRepositoryImpl(StudentRepositoryInterface):
             StudentORM.booking_number == booking_number
         )
         return [orm_student.to_domain() for orm_student in orm_students]
+
     def get_all(self) -> List[Student]:
         orm_students = self.session.query(StudentORM).all()
         return [orm_student.to_domain() for orm_student in orm_students]
@@ -97,8 +111,11 @@ class SQLAlchemyStudentRepositoryImpl(StudentRepositoryInterface):
         orm_students = self.session.query(StudentORM).filter(
             StudentORM.number_of_surf_lessons > 0
         ).all()
-        return [orm_student.to_domain() for orm_student in orm_students]
 
+        result = [orm_student.to_domain() for orm_student in orm_students]
+        print("⭐")
+        print(result[0].departure)
+        return result
 
     # WRONG !!!!! need to find id
     def update(self, id: int, student: Student) -> Student:

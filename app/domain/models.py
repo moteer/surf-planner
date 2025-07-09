@@ -38,6 +38,7 @@ class Student:
     booking_status: date
     number_of_surf_lessons: int
     surf_lesson_package_name: str
+    tent:str
 
 
 @dataclass

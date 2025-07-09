@@ -1,11 +1,34 @@
 from datetime import date, datetime, timedelta
+from typing import Tuple, List
+
+from app.domain.models import Slot, SurfPlan, Student, Group
 from app.domain.repositories_interfaces import SurfPlanRepositoryInterface
 from app.services.student_service import StudentService
-from app.domain.models import Slot, SurfPlan, Student, Group, Instructor
-from typing import Dict, Tuple, List
-import math
-
 from app.services.tide_service_interface import TideServiceInterface
+
+
+def is_adult(student):
+    age_group = student.age_group if student.age_group else "adult"
+    print(age_group)
+    return 'Adult' in age_group
+
+
+def is_teen(student):
+    age_group = student.age_group if student.age_group else "adult"
+    return 'Teens' in age_group
+
+
+def is_kid(student):
+    age_group = student.age_group if student.age_group else "adult"
+    return 'Kids' in age_group
+
+
+def is_level(student, level):
+    student_level = (student.level or "BEGINNER").strip().upper()
+    print("🍏")
+    print(student_level)
+    print(level)
+    return student_level == level
 
 
 class SurfPlanService:
@@ -17,6 +40,38 @@ class SurfPlanService:
         self.surf_plan_repository = surf_plan_repository
         self.student_service = student_service
         self.tide_service = tide_service
+
+    def generate_surf_groups_for_week(self, sunday: date) -> SurfPlan:
+        friday = sunday + timedelta(days=5)
+        print(f"sunday: {sunday}")
+        print(f"friday: {friday}")
+        non_participating_guests = [student for student in
+                                    self.student_service.get_students_by_date_range(sunday, friday)
+                                    if student.number_of_surf_lessons == 0]
+        students: List[Student] = [student for student in
+                                   self.student_service.get_students_with_booked_lessons_by_date_range(sunday, friday)
+                                   if student.number_of_surf_lessons > 0
+                                   and student.booking_status != "cancelled"
+                                   and student.booking_status != "expired"]
+
+        beginner: List[Student] = [student for student in students if
+                                   is_adult(student) and is_level(student, "BEGINNER")]
+        beginner_plus: List[Student] = [student for student in students if
+                                        is_adult(student) and is_level(student, "BEGINNER PLUS")]
+        intermediate: List[Student] = [student for student in students if
+                                       is_adult(student) and is_level(student, "INTERMEDIATE")]
+        advanced: List[Student] = [student for student in students if
+                                   is_adult(student) and is_level(student, "ADVANCED")]
+        teens: List[Student] = [student for student in students if is_teen(student)]
+        kids: List[Student] = [student for student in students if is_kid(student)]
+
+        return {"beginner": beginner,
+                "beginner_plus": beginner_plus,
+                "intermediate": intermediate,
+                "advanced": advanced,
+                "teens": teens,
+                "kids": kids,
+                "non_participating_guests": non_participating_guests}
 
     def generate_surf_plan_for_day(self, plan_date: date) -> SurfPlan:
         # Check if plan exists for this date already

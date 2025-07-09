@@ -47,6 +47,7 @@ class StudentORM(Base):
     booking_status = Column(String(100), nullable=True)
     number_of_surf_lessons = Column(Integer, nullable=True)
     surf_lesson_package_name = Column(String(100), nullable=True)
+    tent = Column(String(100), nullable=True)
 
     # Relationships
     groups = relationship("GroupORM", secondary=student_group_association, back_populates="students")
@@ -56,6 +57,7 @@ class StudentORM(Base):
 
     def to_domain(self) -> Student:
         """Convert ORM model to domain model"""
+        print(self.departure)
         return Student(
             id=self.id,
             first_name=self.first_name,
@@ -69,7 +71,8 @@ class StudentORM(Base):
             departure=self.departure,
             booking_status=self.booking_status,
             number_of_surf_lessons=self.number_of_surf_lessons,
-            surf_lesson_package_name=self.surf_lesson_package_name
+            surf_lesson_package_name=self.surf_lesson_package_name,
+            tent=self.tent
         )
 
     @classmethod
@@ -89,7 +92,8 @@ class StudentORM(Base):
             departure=student.departure,
             booking_status=student.booking_status,
             number_of_surf_lessons=student.number_of_surf_lessons,
-            surf_lesson_package_name=student.surf_lesson_package_name
+            surf_lesson_package_name=student.surf_lesson_package_name,
+            tent=student.tent
         )
 
 
@@ -253,7 +257,7 @@ class RawBookingORM(Base):
     trial_surf_lesson_kids = Column(String(10))
     trial_surf_lesson_kids_qty = Column(Integer)
     guest_diet = Column(String(20))
-    notes_one = Column("notes.1", String(100), key="notes_one")
+    notes_one = Column("notes_guest", String(100), key="notes_one")
     accommodations = Column(String(100))
 
     def to_domain(self) -> Booking:

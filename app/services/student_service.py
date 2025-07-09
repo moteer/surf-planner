@@ -14,28 +14,39 @@ class StudentService:
         return [student for student in self.student_repository.get_all_by_date_range(_date, _date)
                 if student.booking_status != "cancelled"]
 
-        def get_students_with_booked_lessons_by_date_range(self, start_date: date, end_date: date):
-            if not isinstance(start_date, date):
-                raise Exception("Parameter must be a date")
+    def get_students_with_booked_lessons_by_date_range(self, start_date: date, end_date: date):
+        if not isinstance(start_date, date):
+            raise Exception("Parameter must be a date")
 
-            if start_date > end_date:
-                raise Exception("Start date must be before end date")
+        if start_date > end_date:
+            raise Exception("Start date must be before end date")
 
-            students = self.student_repository.get_students_with_booked_lessons()
+        students = self.student_repository.get_students_with_booked_lessons()
 
-            return [student for student in students if student.arrival <= end_date and student.departure >= start_date]
+        return [student for student in students if student.arrival <= end_date and student.departure >= start_date]
 
-        def get_students_by_level(self, level: str):
+    def get_students_by_date_range(self, start_date: date, end_date: date):
+        if not isinstance(start_date, date):
+            raise Exception("Parameter must be a date")
 
-            students = self.get_students_from_repo_fake()
+        if start_date > end_date:
+            raise Exception("Start date must be before end date")
 
-            valid_levels = {student.level for student in students}
-            if level not in valid_levels:
-                return None
-            return [student for student in students if student.level == level]
+        students = self.student_repository.get_all()
 
-        def save_all(self, students):
-            for student in students:
-                self.student_repository.save(student)
+        return [student for student in students if student.arrival <= end_date and student.departure >= start_date]
+
+    def get_students_by_level(self, level: str):
+
+        students = self.get_students_from_repo_fake()
+
+        valid_levels = {student.level for student in students}
+        if level not in valid_levels:
+            return None
+        return [student for student in students if student.level == level]
+
+    def save_all(self, students):
+        for student in students:
+            self.student_repository.save(student)
 
 

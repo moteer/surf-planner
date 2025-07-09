@@ -80,7 +80,9 @@ class StudentTransformerService:
 
     def transform_all_bookings_into_students(self):
         incoming_students = {}
+        print("⭐️")
         incoming_bookings = self.bookings_repository.get_all()
+        print(incoming_bookings)
         for incoming_booking in incoming_bookings:
             incoming_students.setdefault(incoming_booking.booker_id, []).append(Student(
                 id=None,
@@ -95,7 +97,8 @@ class StudentTransformerService:
                 departure=incoming_booking.departure,
                 booking_status=incoming_booking.booking_status,
                 number_of_surf_lessons=incoming_booking.number_of_surf_lessons,
-                surf_lesson_package_name=incoming_booking.surf_lesson_package_name)
+                surf_lesson_package_name=incoming_booking.surf_lesson_package_name,
+                tent=incoming_booking.tent)
             )
 
         for booking_number, _students in incoming_students.items():
