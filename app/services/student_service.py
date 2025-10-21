@@ -1,6 +1,23 @@
 from datetime import date
 from app.domain.repositories_interfaces import StudentRepositoryInterface
 
+
+def is_adult(student):
+    age_group = student.age_group if student.age_group else "adult"
+    print(age_group)
+    return 'Adult' in age_group
+
+
+def is_teen(student):
+    age_group = student.age_group if student.age_group else "adult"
+    return 'Teens' in age_group
+
+
+def is_kid(student):
+    age_group = student.age_group if student.age_group else "adult"
+    return 'Kids' in age_group
+
+
 class StudentService:
 
     def __init__(self, student_repository: StudentRepositoryInterface):
@@ -21,9 +38,32 @@ class StudentService:
         if start_date > end_date:
             raise Exception("Start date must be before end date")
 
-        students = self.student_repository.get_students_with_booked_lessons()
+        students = [student for student in self.student_repository.get_all() if
+                    student.arrival <= end_date and student.departure >= start_date]
 
-        return [student for student in students if student.arrival <= end_date and student.departure >= start_date]
+        adults = [student for student in students if is_adult(student)]
+        print("adults:")
+        print(len(adults))
+        print(adults)
+        # have kids or teens and no other parent with same booking number
+        for parent in adults:
+            print("check potential parent:")
+            print(parent)
+            if (0 == len([student for student in students if
+                          is_adult(parent) and
+                          student != parent and
+                          student.booking_number == parent.booking_number and
+                          is_adult(student)])):
+                print("is a single parent:")
+                print(parent)
+                if (0 < len([student for student in students if
+                             student != parent and student.booking_number == parent.booking_number and
+                             (is_kid(student) or is_teen(student))])):
+                    print("single parent has kids:")
+                    print(parent)
+                    parent.single_parent = True
+
+        return [student for student in students if student.number_of_surf_lessons > 0]
 
     def get_students_by_date_range(self, start_date: date, end_date: date):
         if not isinstance(start_date, date):
@@ -48,5 +88,3 @@ class StudentService:
     def save_all(self, students):
         for student in students:
             self.student_repository.save(student)
-
-

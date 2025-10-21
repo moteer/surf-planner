@@ -38,7 +38,8 @@ class Student:
     booking_status: date
     number_of_surf_lessons: int
     surf_lesson_package_name: str
-    tent:str
+    tent: str
+    single_parent: bool = False
 
 
 @dataclass

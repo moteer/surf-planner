@@ -113,8 +113,6 @@ class SQLAlchemyStudentRepositoryImpl(StudentRepositoryInterface):
         ).all()
 
         result = [orm_student.to_domain() for orm_student in orm_students]
-        print("⭐")
-        print(result[0].departure)
         return result
 
     # WRONG !!!!! need to find id

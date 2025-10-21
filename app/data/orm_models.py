@@ -31,6 +31,9 @@ group_slot_association = Table(
 )
 
 
+
+
+
 class StudentORM(Base):
     __tablename__ = 'students'
 
@@ -72,7 +75,8 @@ class StudentORM(Base):
             booking_status=self.booking_status,
             number_of_surf_lessons=self.number_of_surf_lessons,
             surf_lesson_package_name=self.surf_lesson_package_name,
-            tent=self.tent
+            tent=self.tent,
+            single_parent=False
         )
 
     @classmethod

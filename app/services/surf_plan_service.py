@@ -47,9 +47,42 @@ class SurfPlanService:
         print(f"friday: {friday}")
         non_participating_guests = [student for student in
                                     self.student_service.get_students_by_date_range(sunday, friday)
-                                    if student.number_of_surf_lessons == 0]
+                                    if student.number_of_surf_lessons == 0
+                                    and student.booking_status != "cancelled"
+                                    and student.booking_status != "expired"]
         students: List[Student] = [student for student in
                                    self.student_service.get_students_with_booked_lessons_by_date_range(sunday, friday)
+                                   if student.number_of_surf_lessons > 0
+                                   and student.booking_status != "cancelled"
+                                   and student.booking_status != "expired"]
+
+        beginner: List[Student] = [student for student in students if
+                                   is_adult(student) and is_level(student, "BEGINNER")]
+        beginner_plus: List[Student] = [student for student in students if
+                                        is_adult(student) and is_level(student, "BEGINNER PLUS")]
+        intermediate: List[Student] = [student for student in students if
+                                       is_adult(student) and is_level(student, "INTERMEDIATE")]
+        advanced: List[Student] = [student for student in students if
+                                   is_adult(student) and is_level(student, "ADVANCED")]
+        teens: List[Student] = [student for student in students if is_teen(student)]
+        kids: List[Student] = [student for student in students if is_kid(student)]
+
+        return {"beginner": beginner,
+                "beginner_plus": beginner_plus,
+                "intermediate": intermediate,
+                "advanced": advanced,
+                "teens": teens,
+                "kids": kids,
+                "non_participating_guests": non_participating_guests}
+
+    def generate_surf_groups_for_day(self, day: date) -> SurfPlan:
+        non_participating_guests = [student for student in
+                                    self.student_service.get_all_students_for_date(day)
+                                    if student.number_of_surf_lessons == 0
+                                    and student.booking_status != "cancelled"
+                                    and student.booking_status != "expired"]
+        students: List[Student] = [student for student in
+                                   self.student_service.get_all_students_for_date(day)
                                    if student.number_of_surf_lessons > 0
                                    and student.booking_status != "cancelled"
                                    and student.booking_status != "expired"]
