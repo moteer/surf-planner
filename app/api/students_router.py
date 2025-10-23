@@ -1,3 +1,4 @@
+import logging
 import pandas as pd
 from collections import defaultdict
 from datetime import date, timedelta, datetime
@@ -14,8 +15,11 @@ from app.services.surf_plan_service import SurfPlanService
 from app.services.tide_service_interface import TideServiceMockImpl
 from fastapi import APIRouter, UploadFile, File, HTTPException
 from app.services.student_transformer_service import StudentTransformerService
+from app.utils.date_utils import get_next_sunday, get_saturday_after_sunday, is_sunday
 
 from app.domain.models import SurfPlan, Slot, Group
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -51,32 +55,23 @@ def get_diets_of_guests_per_day(date: Optional[date] = Query(None),
 @router.get("/upcomingweek")
 def get_diets_summary_of_next_week(date: Optional[date] = Query(None),
                                    session: Session = Depends(get_db)):
-    def next_sunday(d: date) -> date:
-        days_ahead = (6 - d.weekday()) % 7  # Sunday is 6
-        return d + timedelta(days=days_ahead)
+    """Get summary of bookings for the upcoming week starting from next Sunday."""
+    upcoming_sunday = get_next_sunday(date)
+    upcoming_saturday = get_saturday_after_sunday(upcoming_sunday)
 
-    def next_saturday_after_sunday(d: date) -> date:
-        sunday = next_sunday(d)
-        return sunday + timedelta(days=6)
-
-    # Example usage
-
-    upcoming_sunday = next_sunday(date)
-    upcoming_saturday = next_saturday_after_sunday(date)
-
-    print(f"for {upcoming_sunday}")
+    logger.info(f"Getting upcoming week data for {upcoming_sunday} to {upcoming_saturday}")
 
     booking_repository = SQLAlchemyBookingRawRepositoryImpl(session)
     bookings = [booking for booking in booking_repository.get_for_date_inclusive(upcoming_sunday, upcoming_saturday) if
                 booking.booking_status != "cancelled" and booking.booking_status != "expired"]
-    print(f"😱 {len(bookings)}")
+    logger.debug(f"Found {len(bookings)} active bookings")
 
     def filter_and_sum_people(date):
         sum_for_date = sum(
             1 for b in bookings
             if b.arrival <= date <= b.departure
         )
-        print(f"{date}: {sum_for_date}")
+        logger.debug(f"{date}: {sum_for_date} guests")
         return sum_for_date
 
     monday = upcoming_sunday + timedelta(days=1)
@@ -125,14 +120,11 @@ def get_surf_plan(plan_date: Optional[date] = date.today(),
         .generate_surf_plan_for_day(plan_date if plan_date is not None else date.today())
 
 
-def notIsSunday(sunday):
-    return sunday.weekday() != 6
-
-
 @router.get("/students/groups")
 def surf_groups_for_week(sunday: date, session: Session = Depends(get_db)):
-    if notIsSunday(sunday):
-        return f"{sunday} is not a sunday!"
+    """Get surf groups for a week starting from Sunday."""
+    if not is_sunday(sunday):
+        raise HTTPException(status_code=400, detail=f"{sunday} is not a sunday!")
 
     surf_plan_service = SurfPlanService(
         SQLAlchemySurfPlanRepositoryImpl(session),
@@ -144,13 +136,14 @@ def surf_groups_for_week(sunday: date, session: Session = Depends(get_db)):
 
 @router.get("/surfplan")
 def surf_groups_for_surf_plan(day: date, session: Session = Depends(get_db)):
+    """Get surf plan for a specific day."""
     surf_plan_service = SurfPlanService(
         SQLAlchemySurfPlanRepositoryImpl(session),
         StudentService(SQLAlchemyStudentRepositoryImpl(session)),
         TideServiceMockImpl())
 
     surf_groups = surf_plan_service.generate_surf_groups_for_day(day)
-    print(surf_groups)
+    logger.debug(f"Generated surf groups: {surf_groups}")
 
     initial_sot_a_groups = [Group(level="Beginner A", age_group="Adults", students=surf_groups["beginner"]),
                             Group(level="Beginner Plus A", age_group="Adults", students=surf_groups["beginner_plus"]),
@@ -173,8 +166,9 @@ def surf_groups_for_surf_plan(day: date, session: Session = Depends(get_db)):
 
 @router.get("/students/groups/export")
 def export_students_to_excel(sunday: date, session: Session = Depends(get_db)):
-    if notIsSunday(sunday):
-        return f"{sunday} is not a sunday!"
+    """Export students groups for a week to Excel."""
+    if not is_sunday(sunday):
+        raise HTTPException(status_code=400, detail=f"{sunday} is not a sunday!")
 
     surf_plan_service = SurfPlanService(
         SQLAlchemySurfPlanRepositoryImpl(session),
@@ -312,8 +306,7 @@ def export_students_to_excel(
     output = BytesIO()
     with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
         def write_sheet(name, students_list):
-            print("🧻")
-            print(students_list[0].departure)
+            logger.debug(f"Writing sheet {name} with {len(students_list)} students")
             df = pd.DataFrame([{
                 "first name": s.first_name,
                 "last name": s.last_name,
@@ -407,27 +400,16 @@ def export_students_as_html(
 
 # http://localhost:8000/bookings/export?start=2025-06-01&end=2025-06-07
 @router.get("/bookings/export")
-def export_students_to_excel(
+def export_bookings_to_excel(
         start: Optional[date] = date.today(),
         end: Optional[date] = date.today(),
         session: Session = Depends(get_db)):
-    student_service = StudentService(SQLAlchemyStudentRepositoryImpl(session))
-    print(f"start: {start}")
-    print(f"end: {end}")
+    """Export bookings for a date range to Excel."""
+    logger.info(f"Exporting bookings from {start} to {end}")
     booking_repository = SQLAlchemyBookingRawRepositoryImpl(session)
 
     bookings = booking_repository.get_for_date_inclusive(start, end)
-    # [booking for booking in booking_repository.get_for_date_inclusive(start, end)
-    # if
-    # booking.booking_status != "cancelled"
-    # and booking.booking_status != "expired"
-    # and booking.number_of_surf_lessons > 0]
-
-    # students = [student for student in student_service.get_students_with_booked_lessons_by_date_range(start, end)
-    #            if student.booking_status != "cancelled" and student.booking_status != "expired"]
-    print("🎉")
-    print(len(bookings))
-    print(bookings)
+    logger.debug(f"Found {len(bookings)} bookings")
 
     output = BytesIO()
     with pd.ExcelWriter(output, engine='xlsxwriter') as writer:

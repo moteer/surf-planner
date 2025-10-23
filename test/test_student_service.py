@@ -5,6 +5,7 @@ from datetime import date, datetime
 from app.domain.models import SurfPlan, Slot, Group, Student, Instructor
 from app.domain.repositories_interfaces import StudentRepositoryInterface
 from app.services.student_service import StudentService
+from test.test_helpers import create_test_student
 
 
 
@@ -20,7 +21,8 @@ class TestStudentService(unittest.TestCase):
     # 8 student_completely_before 2025, 6, 2 – 25, 6, 29, arrival > start, dep < start
     # 9 student_completely_after 2025, 7, 5 – 25, 7, 29, arrival > end, dep > end
 
-    student_exact_range = Student(
+    student_exact_range = create_test_student(
+        id=1,
         first_name="Anna",
         last_name="Schmidt",
         birthday=date(2010, 5, 14),
@@ -29,10 +31,12 @@ class TestStudentService(unittest.TestCase):
         level="beginner",
         booking_number="BN12345",
         arrival=date(2025, 7, 1),
-        departure=date(2025, 7, 3)
+        departure=date(2025, 7, 3),
+        number_of_surf_lessons=3
     )
 
-    student_starts_before = Student(
+    student_starts_before = create_test_student(
+        id=2,
         first_name="Lukas",
         last_name="Meier",
         birthday=date(2005, 8, 22),
@@ -41,26 +45,107 @@ class TestStudentService(unittest.TestCase):
         level="beginner",
         booking_number="BN67890",
         arrival=date(2025, 6, 29),
-        departure=date(2025, 7, 3)
+        departure=date(2025, 7, 3),
+        number_of_surf_lessons=3
     )
 
-    student_ends_after = Student(
-            first_name="Erik",
-            last_name="Müller",
-            birthday=date(1950, 8, 22),
-            gender="male",
-            age_group="teen",
-            level="intermediate",
-            booking_number="BN67890",
-            arrival=date(2025, 7, 1),
-            departure=date(2025, 7, 5)
-        )
-    student_starts_before_ends_after = Student("Mia", "Hoffmann", date(2011, 3, 12), "female", "child", "beginner", "BN11111", date(2025, 6, 29), date(2025, 7, 5))
-    student_inside_range = Student("Ben", "Schneider", date(2008, 11, 5), "male", "teen", "beginner", "BN22222", date(2025, 7, 2), date(2025, 7, 3))
-    student_start_before_ends_within = Student("Lea", "Fischer", date(2012, 6, 21), "female", "child", "intermediate", "BN33333", date(2025, 6, 29), date(2025, 7, 2))
-    student_starts_within_ends_after = Student("Paul", "Weber", date(2007, 9, 17), "male", "teen", "advanced", "BN44444", date(2025, 7, 2), date(2025, 7, 5))
-    student_completely_before = Student("Emma", "Wagner", date(2009, 1, 3), "female", "teen", "intermediate", "BN55555", date(2025, 6, 2), date(2025, 6, 29))
-    student_completely_after = Student("Tom", "Becker", date(2010, 10, 30), "male", "child", "beginner", "BN66666", date(2025, 7, 5), date(2025, 7, 29))
+    student_ends_after = create_test_student(
+        id=3,
+        first_name="Erik",
+        last_name="Müller",
+        birthday=date(1950, 8, 22),
+        gender="male",
+        age_group="teen",
+        level="intermediate",
+        booking_number="BN67890",
+        arrival=date(2025, 7, 1),
+        departure=date(2025, 7, 5),
+        number_of_surf_lessons=3
+    )
+    
+    student_starts_before_ends_after = create_test_student(
+        id=4,
+        first_name="Mia",
+        last_name="Hoffmann",
+        birthday=date(2011, 3, 12),
+        gender="female",
+        age_group="child",
+        level="beginner",
+        booking_number="BN11111",
+        arrival=date(2025, 6, 29),
+        departure=date(2025, 7, 5),
+        number_of_surf_lessons=3
+    )
+    
+    student_inside_range = create_test_student(
+        id=5,
+        first_name="Ben",
+        last_name="Schneider",
+        birthday=date(2008, 11, 5),
+        gender="male",
+        age_group="teen",
+        level="beginner",
+        booking_number="BN22222",
+        arrival=date(2025, 7, 2),
+        departure=date(2025, 7, 3),
+        number_of_surf_lessons=3
+    )
+    
+    student_start_before_ends_within = create_test_student(
+        id=6,
+        first_name="Lea",
+        last_name="Fischer",
+        birthday=date(2012, 6, 21),
+        gender="female",
+        age_group="child",
+        level="intermediate",
+        booking_number="BN33333",
+        arrival=date(2025, 6, 29),
+        departure=date(2025, 7, 2),
+        number_of_surf_lessons=3
+    )
+    
+    student_starts_within_ends_after = create_test_student(
+        id=7,
+        first_name="Paul",
+        last_name="Weber",
+        birthday=date(2007, 9, 17),
+        gender="male",
+        age_group="teen",
+        level="advanced",
+        booking_number="BN44444",
+        arrival=date(2025, 7, 2),
+        departure=date(2025, 7, 5),
+        number_of_surf_lessons=3
+    )
+    
+    student_completely_before = create_test_student(
+        id=8,
+        first_name="Emma",
+        last_name="Wagner",
+        birthday=date(2009, 1, 3),
+        gender="female",
+        age_group="teen",
+        level="intermediate",
+        booking_number="BN55555",
+        arrival=date(2025, 6, 2),
+        departure=date(2025, 6, 29),
+        number_of_surf_lessons=3
+    )
+    
+    student_completely_after = create_test_student(
+        id=9,
+        first_name="Tom",
+        last_name="Becker",
+        birthday=date(2010, 10, 30),
+        gender="male",
+        age_group="child",
+        level="beginner",
+        booking_number="BN66666",
+        arrival=date(2025, 7, 5),
+        departure=date(2025, 7, 29),
+        number_of_surf_lessons=3
+    )
 
     fake_students = []
 
