@@ -1,21 +1,9 @@
+import logging
 from datetime import date
 from app.domain.repositories_interfaces import StudentRepositoryInterface
+from app.utils.student_utils import is_adult, is_teen, is_kid
 
-
-def is_adult(student):
-    age_group = student.age_group if student.age_group else "adult"
-    print(age_group)
-    return 'Adult' in age_group
-
-
-def is_teen(student):
-    age_group = student.age_group if student.age_group else "adult"
-    return 'Teens' in age_group
-
-
-def is_kid(student):
-    age_group = student.age_group if student.age_group else "adult"
-    return 'Kids' in age_group
+logger = logging.getLogger(__name__)
 
 
 class StudentService:
@@ -32,45 +20,68 @@ class StudentService:
                 if student.booking_status != "cancelled"]
 
     def get_students_with_booked_lessons_by_date_range(self, start_date: date, end_date: date):
+        """
+        Get students with booked surf lessons in the specified date range.
+        Also identifies and marks single parents.
+        
+        Args:
+            start_date: Start date of the range
+            end_date: End date of the range
+            
+        Returns:
+            List of students with booked lessons
+            
+        Raises:
+            ValueError: If parameters are invalid
+        """
         if not isinstance(start_date, date):
-            raise Exception("Parameter must be a date")
+            raise ValueError("Parameter must be a date")
 
         if start_date > end_date:
-            raise Exception("Start date must be before end date")
+            raise ValueError("Start date must be before end date")
 
         students = [student for student in self.student_repository.get_all() if
                     student.arrival <= end_date and student.departure >= start_date]
 
         adults = [student for student in students if is_adult(student)]
-        print("adults:")
-        print(len(adults))
-        print(adults)
-        # have kids or teens and no other parent with same booking number
+        logger.debug(f"Found {len(adults)} adult students")
+        
+        # Identify single parents: have kids or teens and no other parent with same booking number
         for parent in adults:
-            print("check potential parent:")
-            print(parent)
+            logger.debug(f"Checking potential parent: {parent.first_name} {parent.last_name}")
             if (0 == len([student for student in students if
                           is_adult(parent) and
                           student != parent and
                           student.booking_number == parent.booking_number and
                           is_adult(student)])):
-                print("is a single parent:")
-                print(parent)
+                logger.debug(f"Parent {parent.first_name} is potentially single parent")
                 if (0 < len([student for student in students if
                              student != parent and student.booking_number == parent.booking_number and
                              (is_kid(student) or is_teen(student))])):
-                    print("single parent has kids:")
-                    print(parent)
+                    logger.info(f"Marking {parent.first_name} {parent.last_name} as single parent")
                     parent.single_parent = True
 
         return [student for student in students if student.number_of_surf_lessons > 0]
 
     def get_students_by_date_range(self, start_date: date, end_date: date):
+        """
+        Get all students in the specified date range.
+        
+        Args:
+            start_date: Start date of the range
+            end_date: End date of the range
+            
+        Returns:
+            List of students whose stay overlaps with the date range
+            
+        Raises:
+            ValueError: If parameters are invalid
+        """
         if not isinstance(start_date, date):
-            raise Exception("Parameter must be a date")
+            raise ValueError("Parameter must be a date")
 
         if start_date > end_date:
-            raise Exception("Start date must be before end date")
+            raise ValueError("Start date must be before end date")
 
         students = self.student_repository.get_all()
 

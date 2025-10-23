@@ -1,3 +1,4 @@
+import logging
 from datetime import date, datetime, timedelta
 from typing import Tuple, List
 
@@ -5,30 +6,9 @@ from app.domain.models import Slot, SurfPlan, Student, Group
 from app.domain.repositories_interfaces import SurfPlanRepositoryInterface
 from app.services.student_service import StudentService
 from app.services.tide_service_interface import TideServiceInterface
+from app.utils.student_utils import is_adult, is_teen, is_kid, is_level
 
-
-def is_adult(student):
-    age_group = student.age_group if student.age_group else "adult"
-    print(age_group)
-    return 'Adult' in age_group
-
-
-def is_teen(student):
-    age_group = student.age_group if student.age_group else "adult"
-    return 'Teens' in age_group
-
-
-def is_kid(student):
-    age_group = student.age_group if student.age_group else "adult"
-    return 'Kids' in age_group
-
-
-def is_level(student, level):
-    student_level = (student.level or "BEGINNER").strip().upper()
-    print("🍏")
-    print(student_level)
-    print(level)
-    return student_level == level
+logger = logging.getLogger(__name__)
 
 
 class SurfPlanService:
@@ -42,9 +22,17 @@ class SurfPlanService:
         self.tide_service = tide_service
 
     def generate_surf_groups_for_week(self, sunday: date) -> SurfPlan:
+        """
+        Generate surf groups for a week starting from Sunday.
+        
+        Args:
+            sunday: The Sunday that starts the week
+            
+        Returns:
+            Dictionary with categorized student groups
+        """
         friday = sunday + timedelta(days=5)
-        print(f"sunday: {sunday}")
-        print(f"friday: {friday}")
+        logger.info(f"Generating surf groups for week: {sunday} to {friday}")
         non_participating_guests = [student for student in
                                     self.student_service.get_students_by_date_range(sunday, friday)
                                     if student.number_of_surf_lessons == 0
@@ -76,6 +64,17 @@ class SurfPlanService:
                 "non_participating_guests": non_participating_guests}
 
     def generate_surf_groups_for_day(self, day: date) -> SurfPlan:
+        """
+        Generate surf groups for a specific day.
+        
+        Args:
+            day: The date to generate groups for
+            
+        Returns:
+            Dictionary with categorized student groups
+        """
+        logger.info(f"Generating surf groups for day: {day}")
+        
         non_participating_guests = [student for student in
                                     self.student_service.get_all_students_for_date(day)
                                     if student.number_of_surf_lessons == 0
