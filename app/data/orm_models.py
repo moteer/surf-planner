@@ -51,8 +51,6 @@ class StudentORM(Base):
     number_of_surf_lessons = Column(Integer, nullable=True)
     surf_lesson_package_name = Column(String(100), nullable=True)
     tent = Column(String(100), nullable=True)
-    number_of_yoga_lessons = Column(Integer, nullable=True, default=0)
-    number_of_skate_lessons = Column(Integer, nullable=True, default=0)
 
     # Relationships
     groups = relationship("GroupORM", secondary=student_group_association, back_populates="students")
@@ -78,9 +76,7 @@ class StudentORM(Base):
             number_of_surf_lessons=self.number_of_surf_lessons,
             surf_lesson_package_name=self.surf_lesson_package_name,
             tent=self.tent,
-            single_parent=False,
-            number_of_yoga_lessons=self.number_of_yoga_lessons or 0,
-            number_of_skate_lessons=self.number_of_skate_lessons or 0
+            single_parent=False
         )
 
     @classmethod

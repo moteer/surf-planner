@@ -42,8 +42,6 @@ class Student:
     surf_lesson_package_name: str
     tent: str
     single_parent: bool = False
-    number_of_yoga_lessons: int = 0
-    number_of_skate_lessons: int = 0
 
 
 @dataclass
