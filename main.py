@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.api import students_router, analytics_router
+from app.api import students_router, analytics_router, crew_router
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(title="SurfPlanner API", description="API for surf and tide planning", version="1.0")
@@ -20,6 +20,7 @@ app.add_middleware(
 # Include all routers
 app.include_router(students_router.router)
 app.include_router(analytics_router.router)
+app.include_router(crew_router.router)
 
 
 

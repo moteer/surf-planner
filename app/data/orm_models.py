@@ -1,9 +1,10 @@
-from sqlalchemy import Column, Integer, String, Date, ForeignKey, Table, DateTime
+from sqlalchemy import Column, Integer, String, Date, ForeignKey, Table, DateTime, Enum
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from datetime import datetime
 
-from app.domain.models import Booking, Student, Instructor, Group, Slot, SurfPlan
+from app.domain.models import (Booking, Student, Instructor, Group, Slot, SurfPlan,
+                                CrewMember, Position, CrewAssignment, Accommodation, AccommodationAssignment, Team)
 
 # SQLAlchemy Base
 Base = declarative_base()
@@ -319,3 +320,185 @@ class RawBookingORM(Base):
     def extract_date(self, str_to_date):
 
         return None if not str_to_date else datetime.strptime(str_to_date, '%Y-%m-%d').date()
+
+
+# Crew Planner ORM Models
+
+class CrewMemberORM(Base):
+    __tablename__ = 'crew_members'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    first_name = Column(String(100), nullable=False)
+    last_name = Column(String(100), nullable=False)
+    email = Column(String(200), nullable=False)
+    phone = Column(String(50), nullable=False)
+    team = Column(Enum(Team), nullable=False)
+    skills = Column(String(500), nullable=True)
+    notes = Column(String(1000), nullable=True)
+
+    # Relationships
+    assignments = relationship("CrewAssignmentORM", back_populates="crew_member")
+    accommodation_assignments = relationship("AccommodationAssignmentORM", back_populates="crew_member")
+
+    def to_domain(self) -> CrewMember:
+        """Convert ORM model to domain model"""
+        return CrewMember(
+            id=self.id,
+            first_name=self.first_name,
+            last_name=self.last_name,
+            email=self.email,
+            phone=self.phone,
+            team=self.team,
+            skills=self.skills or "",
+            notes=self.notes or ""
+        )
+
+    @classmethod
+    def from_domain(cls, crew_member: CrewMember) -> 'CrewMemberORM':
+        """Create ORM model from domain model"""
+        return cls(
+            id=crew_member.id,
+            first_name=crew_member.first_name,
+            last_name=crew_member.last_name,
+            email=crew_member.email,
+            phone=crew_member.phone,
+            team=crew_member.team,
+            skills=crew_member.skills,
+            notes=crew_member.notes
+        )
+
+
+class PositionORM(Base):
+    __tablename__ = 'positions'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(100), nullable=False)
+    team = Column(Enum(Team), nullable=False)
+    description = Column(String(500), nullable=True)
+
+    # Relationships
+    assignments = relationship("CrewAssignmentORM", back_populates="position")
+
+    def to_domain(self) -> Position:
+        """Convert ORM model to domain model"""
+        return Position(
+            id=self.id,
+            name=self.name,
+            team=self.team,
+            description=self.description or ""
+        )
+
+    @classmethod
+    def from_domain(cls, position: Position) -> 'PositionORM':
+        """Create ORM model from domain model"""
+        return cls(
+            id=position.id,
+            name=position.name,
+            team=position.team,
+            description=position.description
+        )
+
+
+class CrewAssignmentORM(Base):
+    __tablename__ = 'crew_assignments'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    crew_member_id = Column(Integer, ForeignKey('crew_members.id'), nullable=False)
+    position_id = Column(Integer, ForeignKey('positions.id'), nullable=False)
+    assignment_date = Column(Date, nullable=False)
+
+    # Relationships
+    crew_member = relationship("CrewMemberORM", back_populates="assignments")
+    position = relationship("PositionORM", back_populates="assignments")
+
+    def to_domain(self) -> CrewAssignment:
+        """Convert ORM model to domain model"""
+        return CrewAssignment(
+            id=self.id,
+            crew_member_id=self.crew_member_id,
+            position_id=self.position_id,
+            assignment_date=self.assignment_date,
+            crew_member=self.crew_member.to_domain() if self.crew_member else None,
+            position=self.position.to_domain() if self.position else None
+        )
+
+    @classmethod
+    def from_domain(cls, assignment: CrewAssignment) -> 'CrewAssignmentORM':
+        """Create ORM model from domain model"""
+        return cls(
+            id=assignment.id,
+            crew_member_id=assignment.crew_member_id,
+            position_id=assignment.position_id,
+            assignment_date=assignment.assignment_date
+        )
+
+
+class AccommodationORM(Base):
+    __tablename__ = 'accommodations'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(100), nullable=False)
+    accommodation_type = Column(String(50), nullable=False)
+    capacity = Column(Integer, nullable=False)
+    notes = Column(String(1000), nullable=True)
+
+    # Relationships
+    accommodation_assignments = relationship("AccommodationAssignmentORM", back_populates="accommodation")
+
+    def to_domain(self) -> Accommodation:
+        """Convert ORM model to domain model"""
+        return Accommodation(
+            id=self.id,
+            name=self.name,
+            accommodation_type=self.accommodation_type,
+            capacity=self.capacity,
+            notes=self.notes or ""
+        )
+
+    @classmethod
+    def from_domain(cls, accommodation: Accommodation) -> 'AccommodationORM':
+        """Create ORM model from domain model"""
+        return cls(
+            id=accommodation.id,
+            name=accommodation.name,
+            accommodation_type=accommodation.accommodation_type,
+            capacity=accommodation.capacity,
+            notes=accommodation.notes
+        )
+
+
+class AccommodationAssignmentORM(Base):
+    __tablename__ = 'accommodation_assignments'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    crew_member_id = Column(Integer, ForeignKey('crew_members.id'), nullable=False)
+    accommodation_id = Column(Integer, ForeignKey('accommodations.id'), nullable=False)
+    start_date = Column(Date, nullable=False)
+    end_date = Column(Date, nullable=False)
+
+    # Relationships
+    crew_member = relationship("CrewMemberORM", back_populates="accommodation_assignments")
+    accommodation = relationship("AccommodationORM", back_populates="accommodation_assignments")
+
+    def to_domain(self) -> AccommodationAssignment:
+        """Convert ORM model to domain model"""
+        return AccommodationAssignment(
+            id=self.id,
+            crew_member_id=self.crew_member_id,
+            accommodation_id=self.accommodation_id,
+            start_date=self.start_date,
+            end_date=self.end_date,
+            crew_member=self.crew_member.to_domain() if self.crew_member else None,
+            accommodation=self.accommodation.to_domain() if self.accommodation else None
+        )
+
+    @classmethod
+    def from_domain(cls, assignment: AccommodationAssignment) -> 'AccommodationAssignmentORM':
+        """Create ORM model from domain model"""
+        return cls(
+            id=assignment.id,
+            crew_member_id=assignment.crew_member_id,
+            accommodation_id=assignment.accommodation_id,
+            start_date=assignment.start_date,
+            end_date=assignment.end_date
+        )

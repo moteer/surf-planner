@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from datetime import date, datetime
-from typing import List
+from typing import List, Optional
+from enum import Enum
 
 
 @dataclass
@@ -70,3 +71,70 @@ class SurfPlan:
     slots: List[Slot] = field(default_factory=list)
     id: int = None
     non_participating_guests: List[Student] = field(default_factory=list)
+
+
+# Crew Planner Models
+
+class Team(str, Enum):
+    """Team enum for positions"""
+    SURF = "SURF"
+    SKATE = "SKATE"
+    YOGA = "YOGA"
+    KITCHEN = "KITCHEN"
+    CLEANING = "CLEANING"
+    RECEPTION = "RECEPTION"
+
+
+@dataclass
+class CrewMember:
+    """Crew member model"""
+    id: Optional[int]
+    first_name: str
+    last_name: str
+    email: str
+    phone: str
+    team: Team
+    skills: str = ""
+    notes: str = ""
+
+
+@dataclass
+class Position:
+    """Position model with team"""
+    id: Optional[int]
+    name: str
+    team: Team
+    description: str = ""
+
+
+@dataclass
+class CrewAssignment:
+    """Crew assignment model - who is assigned to which position and when"""
+    id: Optional[int]
+    crew_member_id: int
+    position_id: int
+    assignment_date: date
+    crew_member: Optional[CrewMember] = None
+    position: Optional[Position] = None
+
+
+@dataclass
+class Accommodation:
+    """Accommodation model - tent, caravan, etc."""
+    id: Optional[int]
+    name: str
+    accommodation_type: str  # tent, caravan, room, etc.
+    capacity: int
+    notes: str = ""
+
+
+@dataclass
+class AccommodationAssignment:
+    """Assignment of crew member to accommodation"""
+    id: Optional[int]
+    crew_member_id: int
+    accommodation_id: int
+    start_date: date
+    end_date: date
+    crew_member: Optional[CrewMember] = None
+    accommodation: Optional[Accommodation] = None

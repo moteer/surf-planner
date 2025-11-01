@@ -4,8 +4,8 @@ from sqlalchemy.orm import Session
 from app.domain.repositories_interfaces import BookingRawRepositoryInterface, SurfPlanRepositoryInterface, \
     StudentRepositoryInterface, InstructorRepository, GroupRepository, \
     SlotRepository
-from app.domain.models import SurfPlan, Student, Instructor, Group, Slot
-from app.data.orm_models import SurfPlanORM, StudentORM, InstructorORM, GroupORM, SlotORM, RawBookingORM
+from app.domain.models import SurfPlan, Student, Instructor, Group, Slot, CrewMember, Position, CrewAssignment, Accommodation, AccommodationAssignment, Team
+from app.data.orm_models import SurfPlanORM, StudentORM, InstructorORM, GroupORM, SlotORM, RawBookingORM, CrewMemberORM, PositionORM, CrewAssignmentORM, AccommodationORM, AccommodationAssignmentORM
 from sqlalchemy import and_
 
 
@@ -295,6 +295,222 @@ class SQLAlchemySlotRepository(SlotRepository):
     def delete(self, id: int) -> bool:
         result = self.session.query(SlotORM).filter(
             SlotORM.id == id
+        ).delete()
+        self.session.commit()
+        return result > 0
+
+
+# Crew Planner Repository Implementations
+
+class SQLAlchemyCrewMemberRepositoryImpl:
+    def __init__(self, session: Session):
+        self.session = session
+
+    def get_all(self) -> List[CrewMember]:
+        orm_crew_members = self.session.query(CrewMemberORM).all()
+        return [crew.to_domain() for crew in orm_crew_members]
+
+    def get_by_id(self, id: int) -> Optional[CrewMember]:
+        orm_crew = self.session.query(CrewMemberORM).filter(
+            CrewMemberORM.id == id
+        ).first()
+        return orm_crew.to_domain() if orm_crew else None
+
+    def get_by_team(self, team: Team) -> List[CrewMember]:
+        orm_crew_members = self.session.query(CrewMemberORM).filter(
+            CrewMemberORM.team == team
+        ).all()
+        return [crew.to_domain() for crew in orm_crew_members]
+
+    def save(self, crew_member: CrewMember) -> CrewMember:
+        orm_crew = CrewMemberORM.from_domain(crew_member)
+        if crew_member.id:
+            self.session.merge(orm_crew)
+        else:
+            self.session.add(orm_crew)
+        self.session.commit()
+        self.session.refresh(orm_crew)
+        return orm_crew.to_domain()
+
+    def delete(self, id: int) -> bool:
+        result = self.session.query(CrewMemberORM).filter(
+            CrewMemberORM.id == id
+        ).delete()
+        self.session.commit()
+        return result > 0
+
+
+class SQLAlchemyPositionRepositoryImpl:
+    def __init__(self, session: Session):
+        self.session = session
+
+    def get_all(self) -> List[Position]:
+        orm_positions = self.session.query(PositionORM).all()
+        return [pos.to_domain() for pos in orm_positions]
+
+    def get_by_id(self, id: int) -> Optional[Position]:
+        orm_position = self.session.query(PositionORM).filter(
+            PositionORM.id == id
+        ).first()
+        return orm_position.to_domain() if orm_position else None
+
+    def get_by_team(self, team: Team) -> List[Position]:
+        orm_positions = self.session.query(PositionORM).filter(
+            PositionORM.team == team
+        ).all()
+        return [pos.to_domain() for pos in orm_positions]
+
+    def save(self, position: Position) -> Position:
+        orm_position = PositionORM.from_domain(position)
+        if position.id:
+            self.session.merge(orm_position)
+        else:
+            self.session.add(orm_position)
+        self.session.commit()
+        self.session.refresh(orm_position)
+        return orm_position.to_domain()
+
+    def delete(self, id: int) -> bool:
+        result = self.session.query(PositionORM).filter(
+            PositionORM.id == id
+        ).delete()
+        self.session.commit()
+        return result > 0
+
+
+class SQLAlchemyCrewAssignmentRepositoryImpl:
+    def __init__(self, session: Session):
+        self.session = session
+
+    def get_all(self) -> List[CrewAssignment]:
+        orm_assignments = self.session.query(CrewAssignmentORM).all()
+        return [assign.to_domain() for assign in orm_assignments]
+
+    def get_by_id(self, id: int) -> Optional[CrewAssignment]:
+        orm_assignment = self.session.query(CrewAssignmentORM).filter(
+            CrewAssignmentORM.id == id
+        ).first()
+        return orm_assignment.to_domain() if orm_assignment else None
+
+    def get_by_date_range(self, start_date: date, end_date: date) -> List[CrewAssignment]:
+        orm_assignments = self.session.query(CrewAssignmentORM).filter(
+            and_(
+                CrewAssignmentORM.assignment_date >= start_date,
+                CrewAssignmentORM.assignment_date <= end_date
+            )
+        ).all()
+        return [assign.to_domain() for assign in orm_assignments]
+
+    def get_by_crew_member(self, crew_member_id: int) -> List[CrewAssignment]:
+        orm_assignments = self.session.query(CrewAssignmentORM).filter(
+            CrewAssignmentORM.crew_member_id == crew_member_id
+        ).all()
+        return [assign.to_domain() for assign in orm_assignments]
+
+    def save(self, assignment: CrewAssignment) -> CrewAssignment:
+        orm_assignment = CrewAssignmentORM.from_domain(assignment)
+        if assignment.id:
+            self.session.merge(orm_assignment)
+        else:
+            self.session.add(orm_assignment)
+        self.session.commit()
+        self.session.refresh(orm_assignment)
+        return orm_assignment.to_domain()
+
+    def delete(self, id: int) -> bool:
+        result = self.session.query(CrewAssignmentORM).filter(
+            CrewAssignmentORM.id == id
+        ).delete()
+        self.session.commit()
+        return result > 0
+
+
+class SQLAlchemyAccommodationRepositoryImpl:
+    def __init__(self, session: Session):
+        self.session = session
+
+    def get_all(self) -> List[Accommodation]:
+        orm_accommodations = self.session.query(AccommodationORM).all()
+        return [acc.to_domain() for acc in orm_accommodations]
+
+    def get_by_id(self, id: int) -> Optional[Accommodation]:
+        orm_accommodation = self.session.query(AccommodationORM).filter(
+            AccommodationORM.id == id
+        ).first()
+        return orm_accommodation.to_domain() if orm_accommodation else None
+
+    def save(self, accommodation: Accommodation) -> Accommodation:
+        orm_accommodation = AccommodationORM.from_domain(accommodation)
+        if accommodation.id:
+            self.session.merge(orm_accommodation)
+        else:
+            self.session.add(orm_accommodation)
+        self.session.commit()
+        self.session.refresh(orm_accommodation)
+        return orm_accommodation.to_domain()
+
+    def delete(self, id: int) -> bool:
+        result = self.session.query(AccommodationORM).filter(
+            AccommodationORM.id == id
+        ).delete()
+        self.session.commit()
+        return result > 0
+
+
+class SQLAlchemyAccommodationAssignmentRepositoryImpl:
+    def __init__(self, session: Session):
+        self.session = session
+
+    def get_all(self) -> List[AccommodationAssignment]:
+        orm_assignments = self.session.query(AccommodationAssignmentORM).all()
+        return [assign.to_domain() for assign in orm_assignments]
+
+    def get_by_id(self, id: int) -> Optional[AccommodationAssignment]:
+        orm_assignment = self.session.query(AccommodationAssignmentORM).filter(
+            AccommodationAssignmentORM.id == id
+        ).first()
+        return orm_assignment.to_domain() if orm_assignment else None
+
+    def get_by_crew_member(self, crew_member_id: int) -> List[AccommodationAssignment]:
+        orm_assignments = self.session.query(AccommodationAssignmentORM).filter(
+            AccommodationAssignmentORM.crew_member_id == crew_member_id
+        ).all()
+        return [assign.to_domain() for assign in orm_assignments]
+
+    def get_by_date_range(self, start_date: date, end_date: date) -> List[AccommodationAssignment]:
+        """Get accommodation assignments that overlap with the given date range"""
+        orm_assignments = self.session.query(AccommodationAssignmentORM).filter(
+            and_(
+                AccommodationAssignmentORM.start_date <= end_date,
+                AccommodationAssignmentORM.end_date >= start_date
+            )
+        ).all()
+        return [assign.to_domain() for assign in orm_assignments]
+
+    def get_by_accommodation_and_date_range(self, accommodation_id: int, start_date: date, end_date: date) -> List[AccommodationAssignment]:
+        """Get accommodation assignments for a specific accommodation that overlap with the given date range"""
+        orm_assignments = self.session.query(AccommodationAssignmentORM).filter(
+            and_(
+                AccommodationAssignmentORM.accommodation_id == accommodation_id,
+                AccommodationAssignmentORM.start_date <= end_date,
+                AccommodationAssignmentORM.end_date >= start_date
+            )
+        ).all()
+        return [assign.to_domain() for assign in orm_assignments]
+
+    def save(self, assignment: AccommodationAssignment) -> AccommodationAssignment:
+        orm_assignment = AccommodationAssignmentORM.from_domain(assignment)
+        if assignment.id:
+            self.session.merge(orm_assignment)
+        else:
+            self.session.add(orm_assignment)
+        self.session.commit()
+        self.session.refresh(orm_assignment)
+        return orm_assignment.to_domain()
+
+    def delete(self, id: int) -> bool:
+        result = self.session.query(AccommodationAssignmentORM).filter(
+            AccommodationAssignmentORM.id == id
         ).delete()
         self.session.commit()
         return result > 0
