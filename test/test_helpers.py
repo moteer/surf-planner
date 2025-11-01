@@ -18,9 +18,7 @@ def create_test_student(
     number_of_surf_lessons: int = 3,
     surf_lesson_package_name: str = "Standard Package",
     tent: str = "T1",
-    single_parent: bool = False,
-    number_of_yoga_lessons: int = 0,
-    number_of_skate_lessons: int = 0
+    single_parent: bool = False
 ) -> Student:
     """
     Create a test student with sensible defaults.
@@ -49,7 +47,5 @@ def create_test_student(
         number_of_surf_lessons=number_of_surf_lessons,
         surf_lesson_package_name=surf_lesson_package_name,
         tent=tent,
-        single_parent=single_parent,
-        number_of_yoga_lessons=number_of_yoga_lessons,
-        number_of_skate_lessons=number_of_skate_lessons
+        single_parent=single_parent
     )
