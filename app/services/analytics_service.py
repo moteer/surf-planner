@@ -1,11 +1,12 @@
 """Analytics service for surf planner statistics."""
 import logging
 from datetime import date
-from typing import Dict, List
+from typing import Dict, List, Optional, Set
 from collections import defaultdict
 
 from app.domain.repositories_interfaces import StudentRepositoryInterface
 from app.utils.student_utils import is_adult, is_teen, is_kid, is_level, filter_active_students, filter_students_with_lessons
+from app.utils.date_utils import TimePeriod, split_date_range_by_period
 
 logger = logging.getLogger(__name__)
 
@@ -199,6 +200,103 @@ class AnalyticsService:
                 "end_date": end_date.isoformat()
             }
         }
+
+    def get_flexible_analytics(
+        self, 
+        start_date: date, 
+        end_date: date, 
+        period: TimePeriod = TimePeriod.WEEKLY,
+        filters: Optional[Set[str]] = None
+    ) -> List[Dict]:
+        """
+        Get analytics data broken down by time periods with flexible filtering.
+        
+        Args:
+            start_date: Start date for the analysis period
+            end_date: End date for the analysis period
+            period: Time period granularity (daily, weekly, monthly)
+            filters: Set of metrics to include. If None, includes all metrics.
+                    Valid filters: 'teens', 'adults', 'kids', 'total_guests',
+                    'surf_lessons', 'yoga_lessons', 'skate_lessons',
+                    'beginner', 'beginner_plus', 'intermediate', 'advanced',
+                    'teen_students', 'kid_students'
+            
+        Returns:
+            List of dictionaries with analytics data for each period
+        """
+        logger.info(f"Getting flexible analytics from {start_date} to {end_date} by {period}")
+        
+        # If no filters specified, include all metrics
+        if filters is None:
+            filters = {
+                'teens', 'adults', 'kids', 'total_guests',
+                'surf_lessons', 'yoga_lessons', 'skate_lessons',
+                'beginner', 'beginner_plus', 'intermediate', 'advanced',
+                'teen_students', 'kid_students'
+            }
+        
+        # Split the date range into periods
+        periods = split_date_range_by_period(start_date, end_date, period)
+        
+        results = []
+        for period_start, period_end in periods:
+            period_data = {
+                "period_start": period_start.isoformat(),
+                "period_end": period_end.isoformat(),
+            }
+            
+            # Get students for this period
+            students = self._get_students_for_period(period_start, period_end)
+            active_students = filter_active_students(students)
+            
+            # Calculate metrics based on filters
+            if 'total_guests' in filters:
+                period_data['total_guests'] = len(active_students)
+            
+            # Age group counts
+            if 'adults' in filters:
+                period_data['adults'] = sum(1 for s in active_students if is_adult(s))
+            
+            if 'teens' in filters:
+                period_data['teens'] = sum(1 for s in active_students if is_teen(s))
+            
+            if 'kids' in filters:
+                period_data['kids'] = sum(1 for s in active_students if is_kid(s))
+            
+            # Lesson counts
+            if 'surf_lessons' in filters:
+                period_data['surf_lessons'] = sum(s.number_of_surf_lessons for s in active_students)
+            
+            if 'yoga_lessons' in filters:
+                period_data['yoga_lessons'] = sum(s.number_of_yoga_lessons for s in active_students)
+            
+            if 'skate_lessons' in filters:
+                period_data['skate_lessons'] = sum(s.number_of_skate_lessons for s in active_students)
+            
+            # Skill level breakdown (for students with surf lessons)
+            with_lessons = filter_students_with_lessons(active_students)
+            
+            if 'beginner' in filters:
+                period_data['beginner'] = sum(1 for s in with_lessons if is_adult(s) and is_level(s, "BEGINNER"))
+            
+            if 'beginner_plus' in filters:
+                period_data['beginner_plus'] = sum(1 for s in with_lessons if is_adult(s) and is_level(s, "BEGINNER PLUS"))
+            
+            if 'intermediate' in filters:
+                period_data['intermediate'] = sum(1 for s in with_lessons if is_adult(s) and is_level(s, "INTERMEDIATE"))
+            
+            if 'advanced' in filters:
+                period_data['advanced'] = sum(1 for s in with_lessons if is_adult(s) and is_level(s, "ADVANCED"))
+            
+            if 'teen_students' in filters:
+                period_data['teen_students'] = sum(1 for s in with_lessons if is_teen(s))
+            
+            if 'kid_students' in filters:
+                period_data['kid_students'] = sum(1 for s in with_lessons if is_kid(s))
+            
+            results.append(period_data)
+        
+        return results
 
     def _get_students_for_period(self, start_date: date, end_date: date) -> List:
         """

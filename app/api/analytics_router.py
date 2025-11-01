@@ -1,7 +1,7 @@
 """Analytics API endpoints for surf planner statistics."""
 import logging
 from datetime import date
-from typing import Optional
+from typing import Optional, List
 
 from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session
@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from app.core.db import get_db
 from app.data.sql_alchemey_repository_impl import SQLAlchemyStudentRepositoryImpl
 from app.services.analytics_service import AnalyticsService
+from app.utils.date_utils import TimePeriod
 
 logger = logging.getLogger(__name__)
 
@@ -167,3 +168,68 @@ def get_comprehensive_statistics(
     
     analytics_service = AnalyticsService(SQLAlchemyStudentRepositoryImpl(session))
     return analytics_service.get_comprehensive_statistics(start_date, end_date)
+
+
+@router.get("/flexible")
+def get_flexible_analytics(
+    start_date: date = Query(..., description="Start date for analysis"),
+    end_date: date = Query(..., description="End date for analysis"),
+    period: TimePeriod = Query(TimePeriod.WEEKLY, description="Time period granularity (daily, weekly, monthly)"),
+    filters: Optional[List[str]] = Query(
+        None,
+        description="Metrics to include. Options: teens, adults, kids, total_guests, "
+                   "surf_lessons, yoga_lessons, skate_lessons, beginner, beginner_plus, "
+                   "intermediate, advanced, teen_students, kid_students"
+    ),
+    session: Session = Depends(get_db)
+):
+    """
+    Get flexible analytics data with customizable time periods and filters.
+    
+    This endpoint allows you to:
+    - Choose between daily, weekly, or monthly time periods
+    - Filter which metrics to include in the response
+    - Analyze any date range
+    
+    Parameters:
+    - start_date: Start date for the analysis period (required)
+    - end_date: End date for the analysis period (required)
+    - period: Time granularity - daily, weekly (default), or monthly
+    - filters: List of metrics to include (if not specified, returns all metrics)
+    
+    Returns:
+    - List of dictionaries, each containing analytics for one time period
+    
+    Example filters:
+    - For age groups: teens, adults, kids
+    - For lesson counts: surf_lessons, yoga_lessons, skate_lessons
+    - For skill levels: beginner, beginner_plus, intermediate, advanced, teen_students, kid_students
+    - For totals: total_guests
+    """
+    logger.info(f"GET /analytics/flexible called with start_date={start_date}, end_date={end_date}, period={period}, filters={filters}")
+    
+    # Validate dates
+    if start_date > end_date:
+        raise HTTPException(status_code=400, detail="Start date must be before or equal to end date")
+    
+    # Convert filters list to set for efficient lookup
+    filter_set = set(filters) if filters else None
+    
+    # Validate filters if provided
+    valid_filters = {
+        'teens', 'adults', 'kids', 'total_guests',
+        'surf_lessons', 'yoga_lessons', 'skate_lessons',
+        'beginner', 'beginner_plus', 'intermediate', 'advanced',
+        'teen_students', 'kid_students'
+    }
+    
+    if filter_set:
+        invalid_filters = filter_set - valid_filters
+        if invalid_filters:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Invalid filters: {invalid_filters}. Valid filters are: {valid_filters}"
+            )
+    
+    analytics_service = AnalyticsService(SQLAlchemyStudentRepositoryImpl(session))
+    return analytics_service.get_flexible_analytics(start_date, end_date, period, filter_set)
