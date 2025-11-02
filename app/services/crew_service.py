@@ -11,7 +11,16 @@ from app.data.sql_alchemey_repository_impl import (
 
 
 class CrewService:
-    """Service for crew management business logic"""
+    """
+    Service for crew management business logic.
+    
+    Manages crew members, positions, crew assignments, accommodations, and accommodation assignments.
+    Provides business logic and validation for all crew-related operations including:
+    - CRUD operations for crew members and positions
+    - Crew assignment scheduling
+    - Accommodation management with capacity checking
+    - Conflict detection and prevention
+    """
     
     def __init__(
         self,
@@ -21,6 +30,16 @@ class CrewService:
         accommodation_repo: SQLAlchemyAccommodationRepositoryImpl,
         accommodation_assignment_repo: SQLAlchemyAccommodationAssignmentRepositoryImpl
     ):
+        """
+        Initialize the CrewService with repository dependencies.
+        
+        Args:
+            crew_member_repo: Repository for crew member operations
+            position_repo: Repository for position operations
+            crew_assignment_repo: Repository for crew assignment operations
+            accommodation_repo: Repository for accommodation operations
+            accommodation_assignment_repo: Repository for accommodation assignment operations
+        """
         self.crew_member_repo = crew_member_repo
         self.position_repo = position_repo
         self.crew_assignment_repo = crew_assignment_repo
@@ -28,27 +47,74 @@ class CrewService:
         self.accommodation_assignment_repo = accommodation_assignment_repo
 
     def get_crew_members(self, team: Optional[Team] = None) -> List[CrewMember]:
-        """Get all crew members, optionally filtered by team"""
+        """
+        Get all crew members, optionally filtered by team.
+        
+        Args:
+            team: Optional Team enum to filter by (SURF, YOGA, SKATE, etc.)
+            
+        Returns:
+            List of CrewMember objects
+        """
         if team:
             return self.crew_member_repo.get_by_team(team)
         return self.crew_member_repo.get_all()
 
     def create_crew_member(self, crew_member: CrewMember) -> CrewMember:
-        """Create a new crew member"""
+        """
+        Create a new crew member.
+        
+        Args:
+            crew_member: CrewMember domain object with crew member details
+            
+        Returns:
+            The created CrewMember with assigned ID
+        """
         return self.crew_member_repo.save(crew_member)
 
     def get_positions(self, team: Optional[Team] = None) -> List[Position]:
-        """Get all positions, optionally filtered by team"""
+        """
+        Get all positions, optionally filtered by team.
+        
+        Args:
+            team: Optional Team enum to filter by
+            
+        Returns:
+            List of Position objects
+        """
         if team:
             return self.position_repo.get_by_team(team)
         return self.position_repo.get_all()
 
     def create_position(self, position: Position) -> Position:
-        """Create a new position"""
+        """
+        Create a new position.
+        
+        Args:
+            position: Position domain object with position details
+            
+        Returns:
+            The created Position with assigned ID
+        """
         return self.position_repo.save(position)
 
     def assign_crew(self, crew_member_id: int, position_id: int, assignment_date: date) -> CrewAssignment:
-        """Assign a crew member to a position on a specific date"""
+        """
+        Assign a crew member to a position on a specific date.
+        
+        Validates that both the crew member and position exist before creating the assignment.
+        
+        Args:
+            crew_member_id: ID of the crew member to assign
+            position_id: ID of the position to assign to
+            assignment_date: Date of the assignment
+            
+        Returns:
+            The created CrewAssignment
+            
+        Raises:
+            ValueError: If crew member or position not found
+        """
         # Verify crew member exists
         crew_member = self.crew_member_repo.get_by_id(crew_member_id)
         if not crew_member:
@@ -76,8 +142,28 @@ class CrewService:
         team: Optional[Team] = None
     ) -> Dict[str, Any]:
         """
-        Get daily crew planning overview for a date range
-        Returns a calendar view with assignments grouped by date
+        Get daily crew planning overview for a date range.
+        
+        Returns a calendar view with assignments grouped by date. Each date contains
+        a list of assignments with crew member and position details.
+        
+        Args:
+            start_date: Start date of the range
+            end_date: End date of the range (inclusive)
+            team: Optional team filter
+            
+        Returns:
+            Dictionary with structure:
+            {
+                "start_date": "2025-06-01",
+                "end_date": "2025-06-30",
+                "team": "SURF" or None,
+                "calendar": {
+                    "2025-06-01": [list of assignments],
+                    "2025-06-02": [list of assignments],
+                    ...
+                }
+            }
         """
         # Get all assignments in the date range
         assignments = self.crew_assignment_repo.get_by_date_range(start_date, end_date)
@@ -124,11 +210,24 @@ class CrewService:
         }
 
     def get_accommodations(self) -> List[Accommodation]:
-        """Get all accommodations"""
+        """
+        Get all accommodations.
+        
+        Returns:
+            List of all Accommodation objects
+        """
         return self.accommodation_repo.get_all()
 
     def create_accommodation(self, accommodation: Accommodation) -> Accommodation:
-        """Create a new accommodation"""
+        """
+        Create a new accommodation.
+        
+        Args:
+            accommodation: Accommodation domain object with accommodation details
+            
+        Returns:
+            The created Accommodation with assigned ID
+        """
         return self.accommodation_repo.save(accommodation)
 
     def assign_accommodation(
@@ -139,11 +238,24 @@ class CrewService:
         end_date: date
     ) -> AccommodationAssignment:
         """
-        Assign accommodation to a crew member with conflict checking
+        Assign accommodation to a crew member with conflict checking.
         
-        Ensures:
-        1. No double booking - the accommodation has capacity
-        2. No tent changes - crew member doesn't change accommodation during their stay
+        Validates two critical business rules:
+        1. No double booking - the accommodation must have available capacity
+        2. No tent changes - crew member cannot switch accommodations during their stay
+        
+        Args:
+            crew_member_id: ID of the crew member
+            accommodation_id: ID of the accommodation
+            start_date: Start date of the accommodation assignment
+            end_date: End date of the accommodation assignment
+            
+        Returns:
+            The created AccommodationAssignment
+            
+        Raises:
+            ValueError: If crew member or accommodation not found, capacity exceeded,
+                       or crew member already assigned to different accommodation during this period
         """
         # Verify crew member exists
         crew_member = self.crew_member_repo.get_by_id(crew_member_id)
@@ -203,7 +315,17 @@ class CrewService:
         start_date: Optional[date] = None, 
         end_date: Optional[date] = None
     ) -> List[AccommodationAssignment]:
-        """Get accommodation assignments, optionally filtered by date range"""
+        """
+        Get accommodation assignments, optionally filtered by date range.
+        
+        Args:
+            start_date: Optional start date filter (inclusive)
+            end_date: Optional end date filter (inclusive)
+            
+        Returns:
+            List of AccommodationAssignment objects that overlap with the date range,
+            or all assignments if no date range specified
+        """
         if start_date and end_date:
             return self.accommodation_assignment_repo.get_by_date_range(start_date, end_date)
         return self.accommodation_assignment_repo.get_all()
