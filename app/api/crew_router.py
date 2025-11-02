@@ -82,6 +82,21 @@ class CrewAssignmentCreate(BaseModel):
     assignment_date: date
 
 
+class CrewAssignmentResponse(BaseModel):
+    id: int
+    crew_member_id: int
+    position_id: int
+    assignment_date: date
+
+    class Config:
+        from_attributes = True
+
+
+class TeamResponse(BaseModel):
+    name: str
+    value: str
+
+
 class AccommodationCreate(BaseModel):
     name: str = Field(..., min_length=1)
     accommodation_type: str = Field(..., min_length=1)
@@ -617,5 +632,85 @@ def delete_accommodation_assignment(
             raise HTTPException(status_code=404, detail=f"Accommodation assignment with id {assignment_id} not found")
     except HTTPException:
         raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# Additional Endpoints for Frontend API
+
+@router.get("/teams", response_model=List[TeamResponse])
+def get_teams():
+    """
+    Get all available teams.
+    
+    Returns a list of all team types that can be assigned to crew members and positions.
+    """
+    try:
+        teams = [{"name": team.name, "value": team.value} for team in Team]
+        return teams
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/members", response_model=List[CrewMemberResponse])
+def get_members(
+    team: Optional[Team] = Query(None, description="Filter by team"),
+    crew_service: CrewService = Depends(get_crew_service)
+):
+    """
+    Get all crew members, optionally filtered by team.
+    
+    This is an alias for GET /crew/crew to match frontend API expectations.
+    """
+    try:
+        crew_members = crew_service.get_crew_members(team)
+        if not crew_members:
+            return []
+        return [
+            CrewMemberResponse(
+                id=cm.id,
+                first_name=cm.first_name,
+                last_name=cm.last_name,
+                email=cm.email,
+                phone=cm.phone,
+                team=cm.team.value,
+                skills=cm.skills,
+                notes=cm.notes
+            )
+            for cm in crew_members
+        ]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/assignments", response_model=List[CrewAssignmentResponse])
+def get_assignments(
+    start_date: Optional[date] = Query(None, description="Start date filter (yyyy-mm-dd)"),
+    end_date: Optional[date] = Query(None, description="End date filter (yyyy-mm-dd)"),
+    crew_service: CrewService = Depends(get_crew_service)
+):
+    """
+    Get crew assignments, optionally filtered by date range.
+    
+    Query Parameters:
+    - start_date: Optional start date to filter assignments (inclusive)
+    - end_date: Optional end date to filter assignments (inclusive)
+    
+    Returns:
+    List of crew assignments with crew member and position IDs.
+    """
+    try:
+        assignments = crew_service.get_crew_assignments(start_date, end_date)
+        if not assignments:
+            return []
+        return [
+            CrewAssignmentResponse(
+                id=a.id,
+                crew_member_id=a.crew_member_id,
+                position_id=a.position_id,
+                assignment_date=a.assignment_date
+            )
+            for a in assignments
+        ]
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
