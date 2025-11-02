@@ -247,10 +247,17 @@ class CrewService:
             
         Returns:
             List of CrewAssignment objects that fall within the date range,
-            or all assignments if no date range specified
+            or all assignments if no date range specified.
+            If only one date is provided, it's used as both start and end date.
         """
         if start_date and end_date:
             return self.crew_assignment_repo.get_by_date_range(start_date, end_date)
+        elif start_date:
+            # If only start date provided, use it as both start and end
+            return self.crew_assignment_repo.get_by_date_range(start_date, start_date)
+        elif end_date:
+            # If only end date provided, use it as both start and end
+            return self.crew_assignment_repo.get_by_date_range(end_date, end_date)
         return self.crew_assignment_repo.get_all()
 
     def delete_crew_assignment(self, assignment_id: int) -> bool:

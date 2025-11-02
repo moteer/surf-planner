@@ -1,5 +1,9 @@
 """
 Integration test for new crew planner API endpoints: /teams, /members, /assignments
+
+Note: This test uses environment variable for DATABASE_URL to ensure test isolation.
+This follows the pattern established in other test files in this repository (e.g., test_crew_integration.py).
+For production use with pytest, consider using fixtures.
 """
 import os
 os.environ['DATABASE_URL'] = 'sqlite:///:memory:'
