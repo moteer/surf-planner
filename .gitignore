@@ -5,3 +5,5 @@ __pycache__/
 .vscode
 env
 app/services/loader/csvs/
+*.db
+test_new_endpoints_service.py
