@@ -30,6 +30,16 @@ class CrewMemberCreate(BaseModel):
     notes: str = ""
 
 
+class CrewMemberUpdate(BaseModel):
+    first_name: Optional[str] = Field(None, min_length=1)
+    last_name: Optional[str] = Field(None, min_length=1)
+    email: Optional[str] = Field(None, min_length=1)
+    phone: Optional[str] = Field(None, min_length=1)
+    team: Optional[Team] = None
+    skills: Optional[str] = None
+    notes: Optional[str] = None
+
+
 class CrewMemberResponse(BaseModel):
     id: int
     first_name: str
@@ -48,6 +58,12 @@ class PositionCreate(BaseModel):
     name: str = Field(..., min_length=1)
     team: Team
     description: str = ""
+
+
+class PositionUpdate(BaseModel):
+    name: Optional[str] = Field(None, min_length=1)
+    team: Optional[Team] = None
+    description: Optional[str] = None
 
 
 class PositionResponse(BaseModel):
@@ -71,6 +87,13 @@ class AccommodationCreate(BaseModel):
     accommodation_type: str = Field(..., min_length=1)
     capacity: int = Field(..., ge=1)
     notes: str = ""
+
+
+class AccommodationUpdate(BaseModel):
+    name: Optional[str] = Field(None, min_length=1)
+    accommodation_type: Optional[str] = Field(None, min_length=1)
+    capacity: Optional[int] = Field(None, ge=1)
+    notes: Optional[str] = None
 
 
 class AccommodationResponse(BaseModel):
@@ -162,6 +185,75 @@ def create_crew_member(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.get("/crew/{crew_member_id}", response_model=CrewMemberResponse)
+def get_crew_member(
+    crew_member_id: int,
+    crew_service: CrewService = Depends(get_crew_service)
+):
+    """Get a specific crew member by ID"""
+    try:
+        crew_member = crew_service.get_crew_member_by_id(crew_member_id)
+        if not crew_member:
+            raise HTTPException(status_code=404, detail=f"Crew member with id {crew_member_id} not found")
+        return CrewMemberResponse(
+            id=crew_member.id,
+            first_name=crew_member.first_name,
+            last_name=crew_member.last_name,
+            email=crew_member.email,
+            phone=crew_member.phone,
+            team=crew_member.team.value,
+            skills=crew_member.skills,
+            notes=crew_member.notes
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.put("/crew/{crew_member_id}", response_model=CrewMemberResponse)
+def update_crew_member(
+    crew_member_id: int,
+    crew_member_update: CrewMemberUpdate,
+    crew_service: CrewService = Depends(get_crew_service)
+):
+    """Update an existing crew member"""
+    try:
+        updated = crew_service.update_crew_member(crew_member_id, crew_member_update.model_dump(exclude_unset=True))
+        if not updated:
+            raise HTTPException(status_code=404, detail=f"Crew member with id {crew_member_id} not found")
+        return CrewMemberResponse(
+            id=updated.id,
+            first_name=updated.first_name,
+            last_name=updated.last_name,
+            email=updated.email,
+            phone=updated.phone,
+            team=updated.team.value,
+            skills=updated.skills,
+            notes=updated.notes
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.delete("/crew/{crew_member_id}", status_code=204)
+def delete_crew_member(
+    crew_member_id: int,
+    crew_service: CrewService = Depends(get_crew_service)
+):
+    """Delete a crew member"""
+    try:
+        deleted = crew_service.delete_crew_member(crew_member_id)
+        if not deleted:
+            raise HTTPException(status_code=404, detail=f"Crew member with id {crew_member_id} not found")
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # Position Endpoints
 
 @router.get("/positions", response_model=List[PositionResponse])
@@ -210,6 +302,67 @@ def create_position(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.get("/positions/{position_id}", response_model=PositionResponse)
+def get_position(
+    position_id: int,
+    crew_service: CrewService = Depends(get_crew_service)
+):
+    """Get a specific position by ID"""
+    try:
+        position = crew_service.get_position_by_id(position_id)
+        if not position:
+            raise HTTPException(status_code=404, detail=f"Position with id {position_id} not found")
+        return PositionResponse(
+            id=position.id,
+            name=position.name,
+            team=position.team.value,
+            description=position.description
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.put("/positions/{position_id}", response_model=PositionResponse)
+def update_position(
+    position_id: int,
+    position_update: PositionUpdate,
+    crew_service: CrewService = Depends(get_crew_service)
+):
+    """Update an existing position"""
+    try:
+        updated = crew_service.update_position(position_id, position_update.model_dump(exclude_unset=True))
+        if not updated:
+            raise HTTPException(status_code=404, detail=f"Position with id {position_id} not found")
+        return PositionResponse(
+            id=updated.id,
+            name=updated.name,
+            team=updated.team.value,
+            description=updated.description
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.delete("/positions/{position_id}", status_code=204)
+def delete_position(
+    position_id: int,
+    crew_service: CrewService = Depends(get_crew_service)
+):
+    """Delete a position"""
+    try:
+        deleted = crew_service.delete_position(position_id)
+        if not deleted:
+            raise HTTPException(status_code=404, detail=f"Position with id {position_id} not found")
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # Crew Assignment Endpoints
 
 @router.post("/assign-crew", status_code=201)
@@ -233,6 +386,22 @@ def assign_crew(
         }
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.delete("/assign-crew/{assignment_id}", status_code=204)
+def delete_crew_assignment(
+    assignment_id: int,
+    crew_service: CrewService = Depends(get_crew_service)
+):
+    """Delete a crew assignment"""
+    try:
+        deleted = crew_service.delete_crew_assignment(assignment_id)
+        if not deleted:
+            raise HTTPException(status_code=404, detail=f"Crew assignment with id {assignment_id} not found")
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -307,6 +476,69 @@ def create_accommodation(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.get("/accommodations/{accommodation_id}", response_model=AccommodationResponse)
+def get_accommodation(
+    accommodation_id: int,
+    crew_service: CrewService = Depends(get_crew_service)
+):
+    """Get a specific accommodation by ID"""
+    try:
+        accommodation = crew_service.get_accommodation_by_id(accommodation_id)
+        if not accommodation:
+            raise HTTPException(status_code=404, detail=f"Accommodation with id {accommodation_id} not found")
+        return AccommodationResponse(
+            id=accommodation.id,
+            name=accommodation.name,
+            accommodation_type=accommodation.accommodation_type,
+            capacity=accommodation.capacity,
+            notes=accommodation.notes
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.put("/accommodations/{accommodation_id}", response_model=AccommodationResponse)
+def update_accommodation(
+    accommodation_id: int,
+    accommodation_update: AccommodationUpdate,
+    crew_service: CrewService = Depends(get_crew_service)
+):
+    """Update an existing accommodation"""
+    try:
+        updated = crew_service.update_accommodation(accommodation_id, accommodation_update.model_dump(exclude_unset=True))
+        if not updated:
+            raise HTTPException(status_code=404, detail=f"Accommodation with id {accommodation_id} not found")
+        return AccommodationResponse(
+            id=updated.id,
+            name=updated.name,
+            accommodation_type=updated.accommodation_type,
+            capacity=updated.capacity,
+            notes=updated.notes
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.delete("/accommodations/{accommodation_id}", status_code=204)
+def delete_accommodation(
+    accommodation_id: int,
+    crew_service: CrewService = Depends(get_crew_service)
+):
+    """Delete an accommodation"""
+    try:
+        deleted = crew_service.delete_accommodation(accommodation_id)
+        if not deleted:
+            raise HTTPException(status_code=404, detail=f"Accommodation with id {accommodation_id} not found")
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.post("/assign-accommodation", status_code=201)
 def assign_accommodation(
     assignment: AccommodationAssignmentCreate,
@@ -369,5 +601,21 @@ def get_accommodation_assignments(
             }
             for a in assignments
         ]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.delete("/assign-accommodation/{assignment_id}", status_code=204)
+def delete_accommodation_assignment(
+    assignment_id: int,
+    crew_service: CrewService = Depends(get_crew_service)
+):
+    """Delete an accommodation assignment"""
+    try:
+        deleted = crew_service.delete_accommodation_assignment(assignment_id)
+        if not deleted:
+            raise HTTPException(status_code=404, detail=f"Accommodation assignment with id {assignment_id} not found")
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

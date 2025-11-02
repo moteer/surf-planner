@@ -335,7 +335,7 @@ class SQLAlchemyCrewMemberRepositoryImpl(CrewMemberRepositoryInterface):
         """Save or update a crew member"""
         orm_crew = CrewMemberORM.from_domain(crew_member)
         if crew_member.id:
-            self.session.merge(orm_crew)
+            orm_crew = self.session.merge(orm_crew)
         else:
             self.session.add(orm_crew)
         self.session.commit()
@@ -380,7 +380,7 @@ class SQLAlchemyPositionRepositoryImpl(PositionRepositoryInterface):
         """Save or update a position"""
         orm_position = PositionORM.from_domain(position)
         if position.id:
-            self.session.merge(orm_position)
+            orm_position = self.session.merge(orm_position)
         else:
             self.session.add(orm_position)
         self.session.commit()
@@ -435,7 +435,7 @@ class SQLAlchemyCrewAssignmentRepositoryImpl(CrewAssignmentRepositoryInterface):
         """Save or update a crew assignment"""
         orm_assignment = CrewAssignmentORM.from_domain(assignment)
         if assignment.id:
-            self.session.merge(orm_assignment)
+            orm_assignment = self.session.merge(orm_assignment)
         else:
             self.session.add(orm_assignment)
         self.session.commit()
@@ -473,7 +473,7 @@ class SQLAlchemyAccommodationRepositoryImpl(AccommodationRepositoryInterface):
         """Save or update an accommodation"""
         orm_accommodation = AccommodationORM.from_domain(accommodation)
         if accommodation.id:
-            self.session.merge(orm_accommodation)
+            orm_accommodation = self.session.merge(orm_accommodation)
         else:
             self.session.add(orm_accommodation)
         self.session.commit()
@@ -539,7 +539,7 @@ class SQLAlchemyAccommodationAssignmentRepositoryImpl(AccommodationAssignmentRep
         """Save or update an accommodation assignment"""
         orm_assignment = AccommodationAssignmentORM.from_domain(assignment)
         if assignment.id:
-            self.session.merge(orm_assignment)
+            orm_assignment = self.session.merge(orm_assignment)
         else:
             self.session.add(orm_assignment)
         self.session.commit()

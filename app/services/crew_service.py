@@ -72,6 +72,52 @@ class CrewService:
         """
         return self.crew_member_repo.save(crew_member)
 
+    def get_crew_member_by_id(self, crew_member_id: int) -> Optional[CrewMember]:
+        """
+        Get a crew member by ID.
+        
+        Args:
+            crew_member_id: ID of the crew member
+            
+        Returns:
+            CrewMember object or None if not found
+        """
+        return self.crew_member_repo.get_by_id(crew_member_id)
+
+    def update_crew_member(self, crew_member_id: int, update_data: Dict[str, Any]) -> Optional[CrewMember]:
+        """
+        Update an existing crew member.
+        
+        Args:
+            crew_member_id: ID of the crew member to update
+            update_data: Dictionary of fields to update
+            
+        Returns:
+            Updated CrewMember or None if not found
+        """
+        crew_member = self.crew_member_repo.get_by_id(crew_member_id)
+        if not crew_member:
+            return None
+        
+        # Update fields
+        for field, value in update_data.items():
+            if hasattr(crew_member, field) and value is not None:
+                setattr(crew_member, field, value)
+        
+        return self.crew_member_repo.save(crew_member)
+
+    def delete_crew_member(self, crew_member_id: int) -> bool:
+        """
+        Delete a crew member.
+        
+        Args:
+            crew_member_id: ID of the crew member to delete
+            
+        Returns:
+            True if deleted, False if not found
+        """
+        return self.crew_member_repo.delete(crew_member_id)
+
     def get_positions(self, team: Optional[Team] = None) -> List[Position]:
         """
         Get all positions, optionally filtered by team.
@@ -97,6 +143,52 @@ class CrewService:
             The created Position with assigned ID
         """
         return self.position_repo.save(position)
+
+    def get_position_by_id(self, position_id: int) -> Optional[Position]:
+        """
+        Get a position by ID.
+        
+        Args:
+            position_id: ID of the position
+            
+        Returns:
+            Position object or None if not found
+        """
+        return self.position_repo.get_by_id(position_id)
+
+    def update_position(self, position_id: int, update_data: Dict[str, Any]) -> Optional[Position]:
+        """
+        Update an existing position.
+        
+        Args:
+            position_id: ID of the position to update
+            update_data: Dictionary of fields to update
+            
+        Returns:
+            Updated Position or None if not found
+        """
+        position = self.position_repo.get_by_id(position_id)
+        if not position:
+            return None
+        
+        # Update fields
+        for field, value in update_data.items():
+            if hasattr(position, field) and value is not None:
+                setattr(position, field, value)
+        
+        return self.position_repo.save(position)
+
+    def delete_position(self, position_id: int) -> bool:
+        """
+        Delete a position.
+        
+        Args:
+            position_id: ID of the position to delete
+            
+        Returns:
+            True if deleted, False if not found
+        """
+        return self.position_repo.delete(position_id)
 
     def assign_crew(self, crew_member_id: int, position_id: int, assignment_date: date) -> CrewAssignment:
         """
@@ -134,6 +226,18 @@ class CrewService:
             position=position
         )
         return self.crew_assignment_repo.save(assignment)
+
+    def delete_crew_assignment(self, assignment_id: int) -> bool:
+        """
+        Delete a crew assignment.
+        
+        Args:
+            assignment_id: ID of the crew assignment to delete
+            
+        Returns:
+            True if deleted, False if not found
+        """
+        return self.crew_assignment_repo.delete(assignment_id)
 
     def get_crew_calendar(
         self, 
@@ -229,6 +333,52 @@ class CrewService:
             The created Accommodation with assigned ID
         """
         return self.accommodation_repo.save(accommodation)
+
+    def get_accommodation_by_id(self, accommodation_id: int) -> Optional[Accommodation]:
+        """
+        Get an accommodation by ID.
+        
+        Args:
+            accommodation_id: ID of the accommodation
+            
+        Returns:
+            Accommodation object or None if not found
+        """
+        return self.accommodation_repo.get_by_id(accommodation_id)
+
+    def update_accommodation(self, accommodation_id: int, update_data: Dict[str, Any]) -> Optional[Accommodation]:
+        """
+        Update an existing accommodation.
+        
+        Args:
+            accommodation_id: ID of the accommodation to update
+            update_data: Dictionary of fields to update
+            
+        Returns:
+            Updated Accommodation or None if not found
+        """
+        accommodation = self.accommodation_repo.get_by_id(accommodation_id)
+        if not accommodation:
+            return None
+        
+        # Update fields
+        for field, value in update_data.items():
+            if hasattr(accommodation, field) and value is not None:
+                setattr(accommodation, field, value)
+        
+        return self.accommodation_repo.save(accommodation)
+
+    def delete_accommodation(self, accommodation_id: int) -> bool:
+        """
+        Delete an accommodation.
+        
+        Args:
+            accommodation_id: ID of the accommodation to delete
+            
+        Returns:
+            True if deleted, False if not found
+        """
+        return self.accommodation_repo.delete(accommodation_id)
 
     def assign_accommodation(
         self, 
@@ -329,3 +479,15 @@ class CrewService:
         if start_date and end_date:
             return self.accommodation_assignment_repo.get_by_date_range(start_date, end_date)
         return self.accommodation_assignment_repo.get_all()
+
+    def delete_accommodation_assignment(self, assignment_id: int) -> bool:
+        """
+        Delete an accommodation assignment.
+        
+        Args:
+            assignment_id: ID of the accommodation assignment to delete
+            
+        Returns:
+            True if deleted, False if not found
+        """
+        return self.accommodation_assignment_repo.delete(assignment_id)
