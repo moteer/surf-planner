@@ -99,9 +99,12 @@ class CrewService:
         if not crew_member:
             return None
         
-        # Update fields
+        # Whitelist of allowed fields to update (excluding id)
+        allowed_fields = {'first_name', 'last_name', 'email', 'phone', 'team', 'skills', 'notes'}
+        
+        # Update only allowed fields
         for field, value in update_data.items():
-            if hasattr(crew_member, field) and value is not None:
+            if field in allowed_fields and value is not None:
                 setattr(crew_member, field, value)
         
         return self.crew_member_repo.save(crew_member)
@@ -171,9 +174,12 @@ class CrewService:
         if not position:
             return None
         
-        # Update fields
+        # Whitelist of allowed fields to update (excluding id)
+        allowed_fields = {'name', 'team', 'description'}
+        
+        # Update only allowed fields
         for field, value in update_data.items():
-            if hasattr(position, field) and value is not None:
+            if field in allowed_fields and value is not None:
                 setattr(position, field, value)
         
         return self.position_repo.save(position)
@@ -361,9 +367,12 @@ class CrewService:
         if not accommodation:
             return None
         
-        # Update fields
+        # Whitelist of allowed fields to update (excluding id)
+        allowed_fields = {'name', 'accommodation_type', 'capacity', 'notes'}
+        
+        # Update only allowed fields
         for field, value in update_data.items():
-            if hasattr(accommodation, field) and value is not None:
+            if field in allowed_fields and value is not None:
                 setattr(accommodation, field, value)
         
         return self.accommodation_repo.save(accommodation)
