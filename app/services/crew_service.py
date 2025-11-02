@@ -233,6 +233,33 @@ class CrewService:
         )
         return self.crew_assignment_repo.save(assignment)
 
+    def get_crew_assignments(
+        self, 
+        start_date: Optional[date] = None, 
+        end_date: Optional[date] = None
+    ) -> List[CrewAssignment]:
+        """
+        Get crew assignments, optionally filtered by date range.
+        
+        Args:
+            start_date: Optional start date filter (inclusive)
+            end_date: Optional end date filter (inclusive)
+            
+        Returns:
+            List of CrewAssignment objects that fall within the date range,
+            or all assignments if no date range specified.
+            If only one date is provided, it's used as both start and end date.
+        """
+        if start_date and end_date:
+            return self.crew_assignment_repo.get_by_date_range(start_date, end_date)
+        elif start_date:
+            # If only start date provided, use it as both start and end
+            return self.crew_assignment_repo.get_by_date_range(start_date, start_date)
+        elif end_date:
+            # If only end date provided, use it as both start and end
+            return self.crew_assignment_repo.get_by_date_range(end_date, end_date)
+        return self.crew_assignment_repo.get_all()
+
     def delete_crew_assignment(self, assignment_id: int) -> bool:
         """
         Delete a crew assignment.
